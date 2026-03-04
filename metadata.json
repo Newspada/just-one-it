@@ -1,0 +1,5 @@
+{
+  "name": "Word Pool Extractor",
+  "description": "An app that extracts 5-word items from a pool of 110, with automatic reshuffling after 50 reveals and a safety lock.",
+  "requestFramePermissions": []
+}
