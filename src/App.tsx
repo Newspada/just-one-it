@@ -25,7 +25,7 @@ interface HistoryItem {
 const STATIC_ITEMS: string[][] = [
   ["BRANCH", "CINDERELLA", "CREPE", "ISLAND", "TAXI"],
   ["SAIL", "PARMESAN", "SHREK", "POLE", "WESTERN"],
-  ["VIKING", "ALARM", "DANCE", "HULK", "DESERT"],
+  ["SOCCER", "ALARM", "DANCE", "HULK", "DESERT"],
   ["GOAL", "BREAD", "DEVIL", "PRIMARY", "TARZAN"],
   ["SCREW", "RAKE", "COMPUTER", "STARBUCKS", "BALL"],
   ["SERIES", "NEST", "SPICE", "ELEPHANT", "CARNIVAL"],
@@ -37,7 +37,7 @@ const STATIC_ITEMS: string[][] = [
   ["EPIPHANY", "ELASTIC", "PAN", "FLASH", "TUNNEL"],
   ["FOX", "POLICE", "SIMPSON", "LIGHTNING", "NEWSPAPER"],
   ["MOUNTAIN", "PEANUT", "LIGHTBULB", "JEDI", "PIMENTO"],
-  ["SOMBRERO", "CLOVER", "BUTTON", "CHEESE", "CHEWBACCA"],
+  ["SOMBRERO", "CLOVER", "BUTTON", "CHEESE", "TEDDY BEAR"],
   ["GOKU", "DOCTOR", "STRAWBERRY", "NUCLEAR", "LOTTERY"],
   ["CEMETERY", "CUPID", "UMBRELLA", "LEAP", "ROOT"],
   ["TREASURE", "PILOT", "MICKEY", "SEWER", "GALAXY"],
@@ -50,7 +50,7 @@ const STATIC_ITEMS: string[][] = [
   ["JONES", "VOLCANO", "PASSION", "ROOSTER", "ELECTRICITY"],
   ["BAKER", "PERFUME", "FLAME", "ZOMBIE", "JOKER"],
   ["POISON", "STAR", "WOLF", "GARIBALDI", "ANNIVERSARY"],
-  ["HAMMER", "CHILE", "TORTELLINI", "EMPEROR", "POPE"],
+  ["HAMMER", "CHILE", "BOLOGNA", "EMPEROR", "POPE"],
   ["HOLLYWOOD", "MOSQUITO", "SPEAR", "PURSE", "END"],
   ["BOARD", "FIREMAN", "GLASS", "SUSHI", "GREECE"],
   ["SLIPPER", "LEAF", "COUGAR", "REVOLUTION", "SAHARA"],
@@ -84,7 +84,7 @@ const STATIC_ITEMS: string[][] = [
   ["CANVAS", "VAMPIRE", "MONOPOLY", "CARTOON", "HOTEL"],
   ["DARWIN", "TOMATO", "PARACHUTE", "CANNON", "BINOCULARS"],
   ["MIRAGE", "RAMSES", "BONFIRE", "CROSSROADS", "PRINCESS"],
-  ["GUILLOTINE", "MAGICIAN", "HOCKEY", "BANANA", "FITZGERALD"],
+  ["GUILLOTINE", "MAGICIAN", "DRINK", "BANANA", "FITZGERALD"],
   ["CAESAR", "NOODLE", "HAT", "DENTIST", "WHEAT"],
   ["SHELL", "SHAKESPEARE", "GIANT", "FOAM", "CAVE"],
   ["KNIFE", "PILLOW", "ARMSTRONG", "SWORD", "FLIGHT"],
@@ -104,7 +104,7 @@ const STATIC_ITEMS: string[][] = [
   ["TOKYO", "HEEL", "CHICKEN", "HELICOPTER", "COLONEL"],
   ["TRADITION", "SNAKE", "CUP", "PICASSO", "WATCH"],
   ["CAKE", "HORSE", "MEXICO", "WHITE", "BALD"],
-  ["CATERPILLAR", "HUMOR", "CORNER", "ANTARCTICA", "SAUSAGE"],
+  ["GREEN", "HUMOR", "CORNER", "ANTARCTICA", "SAUSAGE"],
   ["PLASTIC", "RAY", "CARTON", "PEBBLE", "EVEREST"],
   ["TERMINATOR", "LETTER", "BED", "PARADISE", "EGG"],
   ["NINTENDO", "BET", "SALT", "MANUAL", "FROST"],
@@ -112,45 +112,45 @@ const STATIC_ITEMS: string[][] = [
   ["CLUB", "CHRISTMAS", "FASHION", "STATION", "LAMP"],
   ["RADIO", "PEAR", "GLADIATOR", "SUN", "CEREAL"],
   ["BERRY", "STUDY", "FEAR", "TITANIC", "MACHINE"],
-  ["DWARF", "CIRCUS", "ELVIS", "MOWER", "STONE"],
+  ["DWARF", "CIRCUS", "BISHOP", "MOWER", "STONE"],
   ["TRAIN", "SHRIMP", "ROOM", "CLEOPATRA", "WINDOW"],
   ["TANGO", "RIPE", "TEMPLE", "SAND", "FRIES"],
   ["GRENADE", "STUFFING", "BRUSH", "PIG", "HUMAN"],
   ["ALCATRAZ", "SMOKE", "HAZELNUT", "DIAMOND", "ROSE"],
   ["GODZILLA", "UNIFORM", "RAIN", "FIRE", "HELMET"],
-  ["SHIP", "BOWLING", "CHURCHILL", "RAM", "SPY"],
+  ["SHIP", "BOWLING", "CHURCH", "NET", "SPY"],
   ["HALLOWEEN", "AZZURRO", "BABY", "CANTEEN", "PAIR"],
   ["FAILURE", "HISTORY", "BEER", "DISCO", "PRESIDENT"],
   ["MIRROR", "PROM", "BATH", "PIT", "FAIRY"],
   ["LADDER", "ANGEL", "MAD", "HAIR", "MATRIX"],
-  ["MUSTACHE", "BUBBLE", "CHAIN", "AL BANO", "COOKIE"],
+  ["MUSTACHE", "BUBBLE", "CHAIN", "ELVIS", "COOKIE"],
   ["AVATAR", "MILL", "JUNGLE", "NUN", "FIRECRACKER"],
   ["IRON", "BATMAN", "SONG", "NILE", "CINEMA"],
-  ["PUMP", "ALADDIN", "TUBE", "BELT", "BAR"],
+  ["FERRARI", "ALADDIN", "TUBE", "BELT", "BAR"],
   ["MOUTH", "CAROUSEL", "DICE", "GRASS", "FALL"],
   ["DOPING", "GARLIC", "CUBE", "VIOLET", "MILK"],
   ["ICE", "FLUTE", "CHAMPAGNE", "SAFARI", "ALIEN"],
   ["CANE", "MUSKETEER", "THREAD", "TULIP", "IKEA"],
-  ["CROISSANT", "GHOST", "STRAW", "NAIL", "POTTER"],
+  ["BREAKFAST", "GHOST", "STRAW", "NAIL", "POTTER"],
   ["SPARTACUS", "FUR", "TORNADO", "PYRAMID", "ALLIANCE"]
 ];
 
 const STATIC_ITEMS_IT: string[][] = [
   ["RAMO", "CENERENTOLA", "CREPE", "ISOLA", "TAXI"],
   ["VELA", "PARMIGIANO", "SHREK", "PALE", "WESTERN"],
-  ["VICHINGO", "ALLARME", "DANZA", "HULK", "DESERTO"],
+  ["CALCIO", "ALLARME", "DANZA", "HULK", "DESERTO"],
   ["OBIETTIVO", "PANE", "DIAVOLO", "PRIMARIA", "TARZAN"],
-  ["VITE", "RASTRELLO", "COMPUTER", "STARBUCKS", "PALLA"],
+  ["VITE", "RASTRELLO", "COMPUTER", "MC DONALD'S", "PALLA"],
   ["SERIE", "NIDO", "SPEZIE", "ELEFANTE", "CARNEVALE"],
-  ["VENDETTA", "BOSS", "EMERGENZA", "CROCE", "VALZER"],
+  ["VENDETTA", "CAPO", "EMERGENZA", "CROCE", "VALZER"],
   ["MAFIA", "GROSSO", "MISSILE", "MICROSOFT", "SCI"],
   ["GENIO", "DRACULA", "LEONE", "CALZINO", "VENERDÌ"],
   ["COCKTAIL", "MARIO", "TAPPO", "VIOLINO", "PESCA"],
   ["TOPO", "PINZA", "AMAZZONIA", "TABACCO", "RIGHELLO"],
   ["EPIFANIA", "ELASTICO", "PADELLA", "FLASH", "TUNNEL"],
   ["VOLPE", "POLIZIA", "SIMPSON", "FULMINE", "GIORNALE"],
-  ["MONTAGNA", "ARACHIDI", "LAMPADINA", "JEDI", "PEPERONCINO"],
-  ["SOMBRERO", "TRIFOGLIO", "BOTTONE", "FORMAGGIO", "CHEWBACCA"],
+  ["MONTAGNA", "ARACHIDI", "LAMPADINA", "JEDI", "PEPERONE"],
+  ["SOMBRERO", "TRIFOGLIO", "BOTTONE", "FORMAGGIO", "PELUCHE"],
   ["GOKU", "DOTTORE", "FRAGOLA", "NUCLEARE", "LOTTERIA"],
   ["CIMITERO", "CUPIDO", "OMBRELLO", "SALTO", "RADICE"],
   ["TESORO", "PILOTA", "TOPOLINO", "FOGNA", "GALASSIA"],
@@ -163,7 +163,7 @@ const STATIC_ITEMS_IT: string[][] = [
   ["BENIGNI", "VULCANO", "PASSIONE", "GALLO", "ELETTRICITÀ"],
   ["FORNAIO", "PROFUMO", "FIAMMA", "ZOMBIE", "JOKER"],
   ["VELENO", "STELLA", "LUPO", "GARIBALDI", "ANNIVERSARIO"],
-  ["MARTELLO", "PEPERONCINO", "TORTELLINI", "IMPERATORE", "PAPA"],
+  ["MARTELLO", "PEPERONCINO", "BOLOGNA", "IMPERATORE", "PAPA"],
   ["HOLLYWOOD", "ZANZARA", "LANCIA", "BORSA", "FINE"],
   ["TAVOLO", "POMPIERE", "BICCHIERE", "SUSHI", "GRECIA"],
   ["SCARPA", "FOGLIA", "GIAGUARO", "RIVOLUZIONE", "SAHARA"],
@@ -194,20 +194,20 @@ const STATIC_ITEMS_IT: string[][] = [
   ["PRIGIONE", "BUCO", "MARANZA", "SERA", "MAPPA"],
   ["NUMERO", "DECATHLON", "LIQUORE", "METALLO", "TONNO"],
   ["RE", "BALLETTO", "BAND", "ALCOL", "LAVA"],
-  ["TELA", "VAMPIRO", "MONOPOLY", "FUMETTO", "HOTEL"],
+  ["TELA", "VAMPIRO", "MONOPOLI", "FUMETTO", "HOTEL"],
   ["DARWIN", "POMODORO", "PARACADUTE", "CANNONE", "BINOCOLO"],
   ["MIRAGGIO", "RAMSES", "FALÒ", "INCROCIO", "PRINCIPESSA"],
-  ["GHIGLIOTTINA", "MAGO", "HOCKEY", "BANANA", "MARCO"],
-  ["GIULIO CESARE", "SPAGHETTI", "CAPPELLO", "DENTISTA", "GRANO"],
+  ["GHIGLIOTTINA", "MAGO", "BIBITA", "BANANA", "MARCO"],
+  ["CESARE", "SPAGHETTI", "CAPPELLO", "DENTISTA", "GRANO"],
   ["CONCHIGLIE", "SHAKESPEARE", "GIGANTE", "SCHIUMA", "GROTTA"],
   ["COLTELLO", "CUSCINO", "MANGO", "SPADA", "VOLO"],
-  ["ESPLOSIONE", "PINGUINO", "CELLULA", "GANDHI", "OASI"],
+  ["ESPLOSIONE", "PINGUINO", "TELEFONO", "GANDHI", "OASI"],
   ["COCCODRILLO", "GIOIELLO", "METROPOLITANA", "OCCHIALI", "LUCA"],
   ["MINA", "SIGARETTA", "BRACCIALETTO", "METEO", "TORRE"],
   ["TATUAGGIO", "GERMANIA", "MELA", "SIRENA", "BOXE"],
   ["CUORE", "MOSCA", "PISCINA", "UNICORNO", "ARANCIA"],
   ["MELONE", "ANCORA", "ISRAELE", "CACTUS", "TENNIS"],
-  ["PEPERONE", "TRIANGOLO", "BAMBOLA", "ITALIA", "SCENA"],
+  ["PEPE", "TRIANGOLO", "BAMBOLA", "ITALIA", "SCENA"],
   ["POLARE", "TOPO", "COLLANA", "FATTORIA", "BELGIO"],
   ["FRANCIA", "LUNA", "CAFFETTERIA", "MANICO", "ATTREZZO"],
   ["CORDA", "AUSTRALIA", "CASTELLO", "GUARDIA", "PECORA"],
@@ -217,34 +217,34 @@ const STATIC_ITEMS_IT: string[][] = [
   ["TOKYO", "TACCO", "POLLO", "ELICOTTERO", "COLONNELLO"],
   ["TRADIZIONE", "SERPENTE", "TAZZA", "PICASSO", "OROLOGIO"],
   ["TORTA", "CAVALLO", "MESSICO", "BIANCO", "CALVO"],
-  ["BRUCO", "UMORISMO", "ANGOLO", "ANTARTIDE", "SALSICCIA"],
-  ["PLASTICA", "RAGGIO", "CARTONE", "CIOTTOLO", "EVEREST"],
+  ["VERDE", "UMORISMO", "ANGOLO", "ANTARTIDE", "SALSICCIA"],
+  ["PLASTICA", "RAGGIO", "CARTONE", "SASSO", "EVEREST"],
   ["TERMINATOR", "LETTERA", "LETTO", "PARADISO", "UOVO"],
   ["NINTENDO", "SCOMMESSA", "SALE", "MANUALE", "FREDDO"],
   ["CASA", "PADRINO", "GUERRA", "CORDA", "VINO"],
   ["CLUB", "NATALE", "MODA", "STAZIONE", "LAMPADA"],
   ["RADIO", "PERA", "GLADIATORE", "SOLE", "CEREALI"],
   ["BACCA", "STUDIO", "PAURA", "TITANIC", "MACCHINA"],
-  ["NANO", "CIRCO", "ELVIS", "TAGLIAERBA", "PIETRA"],
+  ["NANO", "CIRCO", "PRETE", "TAGLIAERBA", "PIETRA"],
   ["TRENO", "GAMBERO", "STANZA", "CLEOPATRA", "FINESTRA"],
   ["TANGO", "MATURO", "TEMPIO", "SABBIA", "PATATINE"],
   ["GRANATA", "RIPIENO", "SPAZZOLA", "MAIALE", "UMANO"],
   ["ALCATRAZ", "FUMO", "NOCCIOLA", "DIAMANTE", "ROSA"],
   ["GODZILLA", "UNIFORME", "PIOGGIA", "FUOCO", "CASCO"],
-  ["NAVE", "BOWLING", "CHURCHILL", "MONTONE", "SPIA"],
+  ["NAVE", "BOWLING", "CHIESA", "RETE", "SPIA"],
   ["HALLOWEEN", "AZZURRO", "BAMBINO", "BORRACCIA", "COPPIA"],
   ["FALLIMENTO", "STORIA", "BIRRA", "DISCOTECA", "PRESIDENTE"],
   ["SPECCHIO", "CAPODANNO", "BAGNO", "FOSSO", "FATA"],
   ["SCALA", "ANGELO", "PAZZO", "CAPELLI", "MATRIX"],
-  ["BAFFI", "BOLLA", "CATENA", "AL BANO", "BISCOTTO"],
+  ["BAFFI", "BOLLA", "CATENA", "ALBANO", "BISCOTTO"],
   ["AVATAR", "MULINO", "GIUNGLA", "SUORA", "PETARDO"],
   ["FERRO", "BATMAN", "CANZONE", "NILO", "CINEMA"],
-  ["POMPA", "ALADDIN", "TUBO", "CINTURA", "BAR"],
+  ["FERRARI", "ALADDIN", "TUBO", "CINTURA", "BAR"],
   ["BOCCA", "GIOSTRA", "DADO", "ERBA", "CADUTA"],
   ["DOPING", "AGLIO", "CUBETTO", "VIOLA", "LATTE"],
   ["GHIACCIO", "FLAUTO", "CHAMPAGNE", "SAFARI", "ALIENO"],
   ["BASTONE", "MOSCHETTIERE", "FILO", "TULIPANO", "IKEA"],
-  ["CROISSANT", "FANTASMA", "PAGLIA", "CHIODO", "POTTER"],
+  ["COLAZIONE", "FANTASMA", "PAGLIA", "CHIODO", "POTTER"],
   ["ALESSANDRO", "PELLICCIA", "TORNADO", "PIRAMIDE", "ALLEANZA"]
 ];
 
@@ -276,6 +276,7 @@ export default function App() {
   const [summaryData, setSummaryData] = useState({ total: 0, correct: 0, skipped: 0, errors: 0 });
   const [showEn, setShowEn] = useState(false);
   const [showIt, setShowIt] = useState(true);
+  const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
 
   // Initialize pool
   const initializePool = useCallback(() => {
@@ -287,6 +288,7 @@ export default function App() {
     setTotalScore(0);
     setIsAwaitingScore(false);
     setShowSummary(false);
+    setSelectedWordIndex(null);
   }, []);
 
   useEffect(() => {
@@ -299,8 +301,8 @@ export default function App() {
     let nextItem: Item;
     let remainingPool: Item[];
 
-    // If 65 items revealed, reset and reshuffle pool
-    if (revealedCount >= 65) {
+    // If 110 items revealed, reset and reshuffle pool
+    if (revealedCount >= STATIC_ITEMS.length) {
       const allItems = generateItems();
       nextItem = allItems[0];
       remainingPool = allItems.slice(1);
@@ -317,6 +319,7 @@ export default function App() {
     setHistory(prev => [{ item: nextItem, score: null }, ...prev]);
     setIsLocked(true);
     setIsAwaitingScore(true);
+    setSelectedWordIndex(null);
   };
 
   const handleScore = (score: number) => {
@@ -464,7 +467,7 @@ export default function App() {
           <div className="flex flex-col z-10">
             <h1 className="text-2xl font-bold tracking-tight">Just One</h1>
             <div className="flex items-center gap-1.5">
-              <p className="text-[10px] opacity-80">Revealed: {revealedCount} / 65</p>
+              <p className="text-[10px] opacity-80">Revealed: {revealedCount} / {STATIC_ITEMS.length}</p>
               <button 
                 onClick={initializePool}
                 disabled={isLocked}
@@ -530,18 +533,24 @@ export default function App() {
                   <span className="text-base font-bold opacity-40">#{currentItem.originalIndex}</span>
                 </div>
                 {currentItem.words.map((word, idx) => (
-                  <div key={idx} className="flex flex-col items-center leading-tight">
+                  <button 
+                    key={idx} 
+                    onClick={() => setSelectedWordIndex(selectedWordIndex === idx ? null : idx)}
+                    className={`flex flex-col items-center leading-tight transition-all duration-200 focus:outline-none ${
+                      selectedWordIndex === idx ? 'scale-120' : 'scale-100 opacity-60 hover:opacity-100'
+                    }`}
+                  >
                     {showIt && (
-                      <span className="text-2xl sm:text-3xl font-bold capitalize text-slate-800 tracking-wide">
+                      <span className={`${selectedWordIndex === idx ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl'} font-bold capitalize text-slate-800 tracking-wide transition-all`}>
                         {currentItem.wordsIt[idx]}
                       </span>
                     )}
                     {showEn && (
-                      <span className={`${showIt ? 'text-xs sm:text-sm font-semibold text-slate-400' : 'text-2xl sm:text-3xl font-bold text-slate-800'} capitalize tracking-wide`}>
+                      <span className={`${showIt ? (selectedWordIndex === idx ? 'text-sm sm:text-base' : 'text-xs sm:text-sm') : (selectedWordIndex === idx ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl')} font-semibold ${showIt ? 'text-slate-400' : 'text-slate-800'} capitalize tracking-wide transition-all`}>
                         {word}
                       </span>
                     )}
-                  </div>
+                  </button>
                 ))}
               </motion.div>
             ) : (
@@ -635,7 +644,7 @@ export default function App() {
               }`}
             >
               {isLocked ? <Lock size={20} /> : <RefreshCw size={20} className={pool.length === 0 ? 'animate-spin' : ''} />}
-              {revealedCount >= 65 ? 'Reshuffle & Draw' : 'Draw'}
+              Draw
             </button>
           )}
         </div>
