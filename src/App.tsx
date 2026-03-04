@@ -10,34 +10,136 @@ import { motion, AnimatePresence } from 'motion/react';
 // Types
 interface Item {
   id: number;
+  originalIndex: number;
   words: string[];
 }
 
-// Helper to generate 110 items with 5 words each
-const generateItems = (): Item[] => {
-  const wordPool = [
-    "ocean", "mountain", "forest", "river", "desert", "valley", "island", "canyon", "prairie", "tundra",
-    "starlight", "moonlight", "sunshine", "breeze", "thunder", "lightning", "rainbow", "aurora", "comet", "nebula",
-    "ancient", "modern", "future", "mystic", "silent", "vibrant", "golden", "silver", "azure", "crimson",
-    "journey", "quest", "path", "bridge", "gate", "tower", "castle", "temple", "shrine", "garden",
-    "wisdom", "courage", "honor", "peace", "spirit", "dream", "echo", "shadow", "flame", "frost",
-    "crystal", "emerald", "sapphire", "ruby", "amber", "pearl", "diamond", "quartz", "onyx", "jade",
-    "eagle", "wolf", "lion", "tiger", "bear", "whale", "dolphin", "phoenix", "dragon", "griffin",
-    "whisper", "melody", "rhythm", "harmony", "canvas", "sculpture", "poem", "fable", "legend", "myth",
-    "compass", "anchor", "lantern", "key", "scroll", "shield", "sword", "crown", "throne", "scepter",
-    "nebula", "galaxy", "cosmos", "planet", "orbit", "gravity", "vacuum", "meteor", "eclipse", "zenith"
-  ];
+// Static list of 110 items provided by the user
+const STATIC_ITEMS: string[][] = [
+  ["BRANCH", "CINDERELLA", "CREPE", "ISLAND", "TAXI"],
+  ["SAIL", "CHEDDAR", "SHREK", "POLE", "WESTERN"],
+  ["VIKING", "ALARM", "DANCE", "HULK", "DESERT"],
+  ["GOAL", "BREAD", "DEVIL", "PRIMARY", "TARZAN"],
+  ["SCREW", "RAKE", "COMPUTER", "STARBUCKS", "BALL"],
+  ["SERIES", "NEST", "SPICE", "ELEPHANT", "CARNIVAL"],
+  ["VENGEANCE", "BOSS", "EMERGENCY", "CROSS", "WALTZ"],
+  ["MAFIA", "LARGE", "MISSILE", "MICROSOFT", "SKI"],
+  ["GENIUS", "DRACULA", "LION", "SOCK", "FRIDAY"],
+  ["COCKTAIL", "MARIO", "CORK", "VIOLIN", "PEACH"],
+  ["RAT", "PLIER", "AMAZON", "TOBACCO", "RULER"],
+  ["HANUKKAH", "ELASTIC", "PAN", "FLASH", "TUNNEL"],
+  ["FOX", "POLICE", "SIMPSON", "LIGHTNING", "NEWSPAPER"],
+  ["MOUNTAIN", "PEANUT", "LIGHTBULB", "JEDI", "PIMENTO"],
+  ["SOMBRERO", "CLOVER", "BUTTON", "CHEESE", "CHEWBACCA"],
+  ["WIDOWMAKER", "DOCTOR", "STRAWBERRY", "NUCLEAR", "LOTTERY"],
+  ["CEMETERY", "CUPID", "UMBRELLA", "LEAP", "ROOT"],
+  ["TREASURE", "PILOT", "MICKEY", "SEWER", "GALAXY"],
+  ["MYTH", "FACEBOOK", "ACORN", "BONE", "BRIDGE"],
+  ["CRANE", "OPERATION", "RAP", "MUSE", "DEFENSE"],
+  ["LIGHT", "SOFA", "MOZART", "RING", "PIZZA"],
+  ["KNIGHT", "PEACE", "FLOWER", "SWITZERLAND", "CALENDAR"],
+  ["SYRUP", "FOREST", "SCALE", "ZEUS", "COCKROACH"],
+  ["PIRATE", "VACATION", "ELF", "MAGNET", "FORK"],
+  ["BUFFY", "VOLCANO", "PASSION", "ROOSTER", "ELECTRICITY"],
+  ["BAKER", "PERFUME", "FLAME", "ZOMBIE", "JOKER"],
+  ["POISON", "STAR", "WOLF", "JONES", "ANNIVERSARY"],
+  ["HAMMER", "CHILE", "GUMBO", "EMPEROR", "POPE"],
+  ["HOLLYWOOD", "MOSQUITO", "SPEAR", "PURSE", "END"],
+  ["BOARD", "FIREMAN", "GLASS", "BURRITO", "GREECE"],
+  ["SLIPPER", "LEAF", "COUGAR", "REVOLUTION", "SAHARA"],
+  ["GROTTO", "FORD", "CASINO", "CANDY", "FOUNTAIN"],
+  ["FLINTSTONE", "ROBOT", "COMEDY", "LANGUAGE", "HAIRDRESSER"],
+  ["DINOSAUR", "YELLOW", "MUSHROOM", "PIGEON", "PIKACHU"],
+  ["THUNDER", "GARDEN", "PAINTING", "SHACK", "TRUCE"],
+  ["MUMMY", "BATTERY", "FAIR", "KARATE", "PARROT"],
+  ["OLYMPICS", "CLIMB", "LAWYER", "TOLKIEN", "RIVER"],
+  ["CARPET", "PONY", "CROWN", "NEW", "TARANTINO"],
+  ["BARBIE", "CHOCOLATE", "SNOW", "TIE", "WIND"],
+  ["THOUGHT", "FRANKENSTEIN", "SHELF", "ACCENT", "SHOWER"],
+  ["STEW", "CANADA", "ZOO", "PIPE", "BOOK"],
+  ["TOWEL", "VENUS", "OCTOPUS", "CYCLE", "OPERA"],
+  ["LADYBUG", "MUSTARD", "SHERLOCK", "BOTTLE", "VIRUS"],
+  ["MUSIC", "THROAT", "AMERICA", "COFFEE", "FEVER"],
+  ["GOOGLE", "BOW", "MARS", "GOLF", "TICKET"],
+  ["REGISTER", "PLAYSTATION", "BLOND", "IRIS", "LIMB"],
+  ["OPRAH", "NINJA", "COMFORTER", "HUNTER", "VEGETABLE"],
+  ["OVEN", "SOCKET", "EASTER", "HOSE", "RAIL"],
+  ["BUTTERFLY", "POWDER", "PORCELAIN", "MARKET", "COCOON"],
+  ["BARBECUE", "PANDA", "DREAM", "MARRIAGE", "BELLYBUTTON"],
+  ["CAVITY", "SLEEVE", "GREMLINS", "POKER", "PIE"],
+  ["SUGAR", "THEATER", "SHOVEL", "DUNE", "PREGNANT"],
+  ["CAT", "PALACE", "ELECTION", "HONEY", "RAMBO"],
+  ["REGGAE", "MANURE", "LAKE", "MONKEY", "LIGHTHOUSE"],
+  ["NEIGHBORHOOD", "ROCK", "TIGER", "NEEDLE", "SOAP"],
+  ["PRISON", "HOLE", "PUNK", "EVENING", "MAP"],
+  ["NUMBER", "DECATHLON", "RUM", "METAL", "TUNA"],
+  ["KING", "BALLET", "BAND", "ALCOHOL", "LAVA"],
+  ["CANVAS", "VAMPIRE", "MONOPOLY", "CARTOON", "HOTEL"],
+  ["DARWIN", "TOMATO", "PARACHUTE", "CANNON", "BINOCULARS"],
+  ["MIRAGE", "RAMSES", "BONFIRE", "CROSSROADS", "PRINCESS"],
+  ["GUILLOTINE", "MAGICIAN", "HOCKEY", "BANANA", "FITZGERALD"],
+  ["CAESAR", "NOODLE", "HAT", "DENTIST", "WHEAT"],
+  ["SHELL", "SHAKESPEARE", "GIANT", "FOAM", "CAVE"],
+  ["KNIFE", "PILLOW", "ARMSTRONG", "SWORD", "FLIGHT"],
+  ["EXPLOSION", "PENGUIN", "CELL", "GANDHI", "OASIS"],
+  ["CROCODILE", "JEWELRY", "SUBWAY", "GLASSES", "STING"],
+  ["JACKSON", "CIGARETTE", "BRACELET", "WEATHER", "TOWER"],
+  ["TATTOO", "SPIELBERG", "APPLE", "SIREN", "BOXING"],
+  ["HEART", "MOSCOW", "POOL", "UNICORN", "ORANGE"],
+  ["MELON", "ANCHOR", "ISRAEL", "CACTUS", "TENNIS"],
+  ["PEPPER", "TRIANGLE", "DOLL", "ITALY", "SCENE"],
+  ["POLAR", "MOUSE", "NECKLACE", "FARM", "BELGIUM"],
+  ["FRANCE", "MOON", "CAFETERIA", "HANDLE", "TOOL"],
+  ["STRING", "AUSTRALIA", "CASTLE", "GUARD", "SHEEP"],
+  ["PUPPET", "GAME", "VEGAS", "SAFE", "PLANE"],
+  ["BRAIN", "MASK", "CONCERT", "TROY", "SHARK"],
+  ["LONELY", "POTATO", "WAVE", "SCHOOL", "LEGO"],
+  ["TOKYO", "HEEL", "CHICKEN", "HELICOPTER", "COLONEL"],
+  ["TRADITION", "SNAKE", "CUP", "PICASSO", "WATCH"],
+  ["CAKE", "STALLION", "MEXICO", "WHITE", "BALD"],
+  ["CATERPILLAR", "HUMOR", "CORNER", "ANTARCTICA", "SAUSAGE"],
+  ["PLASTIC", "RAY", "CARTON", "PEBBLE", "EVEREST"],
+  ["TERMINATOR", "LETTER", "DRAG", "PARADISE", "EGG"],
+  ["NINTENDO", "BET", "SALT", "MANUAL", "FROST"],
+  ["HOUSE", "GODFATHER", "WAR", "ROPE", "WINE"],
+  ["CLUB", "CHRISTMAS", "FASHION", "STATION", "LAMP"],
+  ["RADIO", "PEAR", "GLADIATOR", "SUN", "CEREAL"],
+  ["BERRY", "STUDY", "GOTHIC", "TITANIC", "MACHINE"],
+  ["DWARF", "CIRCUS", "ELVIS", "MOWER", "STONE"],
+  ["TRAIN", "SHRIMP", "ROOM", "CLEOPATRA", "WINDOW"],
+  ["TANGO", "RIPE", "TEMPLE", "SAND", "FRIES"],
+  ["GRENADE", "STUFFING", "BRUSH", "PIG", "HUMAN"],
+  ["ALCATRAZ", "SMOKE", "HAZELNUT", "DIAMOND", "ROSE"],
+  ["GODZILLA", "UNIFORM", "RAIN", "FIRE", "HELMET"],
+  ["SHIP", "BOWLING", "CHURCHILL", "RAM", "SPY"],
+  ["HALLOWEEN", "CHIP", "BABY", "CANTEEN", "PAIR"],
+  ["FAILURE", "HISTORY", "BEER", "DISCO", "PRESIDENT"],
+  ["MIRROR", "PROM", "BATH", "PIT", "FAIRY"],
+  ["LADDER", "ANGEL", "MAD", "HAIR", "MATRIX"],
+  ["MUSTACHE", "BUBBLE", "CHAIN", "STARK", "COOKIE"],
+  ["AVATAR", "MILL", "JUNGLE", "NUN", "FIRECRACKER"],
+  ["IRON", "BATMAN", "SONG", "NILE", "CINEMA"],
+  ["PUMP", "ALADDIN", "TUBE", "BELT", "BAR"],
+  ["MOUTH", "CAROUSEL", "PSYCHO", "GRASS", "FALL"],
+  ["DOPING", "GARLIC", "CUBE", "ROCKY", "MILK"],
+  ["ICE", "FLUTE", "CHAMPAGNE", "SAFARI", "ALIEN"],
+  ["CANE", "MUSKETEER", "THREAD", "TULIP", "IKEA"],
+  ["CROISSANT", "GHOST", "STRAW", "NAIL", "POTTER"],
+  ["SPARTACUS", "FUR", "TORNADO", "PYRAMID", "ALLIANCE"]
+];
 
-  const items: Item[] = [];
-  for (let i = 0; i < 110; i++) {
-    const words: string[] = [];
-    for (let j = 0; j < 5; j++) {
-      const randomIndex = Math.floor(Math.random() * wordPool.length);
-      words.push(wordPool[randomIndex]);
-    }
-    items.push({ id: i, words });
-  }
-  return items;
+// Helper to generate 110 items from the static list and shuffle them
+const generateItems = (): Item[] => {
+  const itemsWithOriginalIndex = STATIC_ITEMS.map((words, index) => ({
+    originalIndex: index + 1,
+    words
+  }));
+  const shuffled = [...itemsWithOriginalIndex].sort(() => Math.random() - 0.5);
+  return shuffled.map((item, id) => ({ 
+    id, 
+    originalIndex: item.originalIndex, 
+    words: item.words 
+  }));
 };
 
 export default function App() {
@@ -50,9 +152,7 @@ export default function App() {
   // Initialize pool
   const initializePool = useCallback(() => {
     const newItems = generateItems();
-    // Shuffle
-    const shuffled = [...newItems].sort(() => Math.random() - 0.5);
-    setPool(shuffled);
+    setPool(newItems);
     setRevealedCount(0);
     setCurrentItem(null);
     setHistory([]);
@@ -65,16 +165,15 @@ export default function App() {
   const extractItem = () => {
     if (isLocked || pool.length === 0) return;
 
-    // If 50 items revealed, reshuffle everything
+    // If 50 items revealed, reset and reshuffle pool
     if (revealedCount >= 50) {
       const allItems = generateItems();
-      const reshuffled = [...allItems].sort(() => Math.random() - 0.5);
-      setPool(reshuffled);
+      setPool(allItems);
       setRevealedCount(0);
-      // After reshuffle, we still want to draw one
-      const nextItem = reshuffled[0];
+      // After reset, we still want to draw one
+      const nextItem = allItems[0];
       setCurrentItem(nextItem);
-      setPool(reshuffled.slice(1));
+      setPool(allItems.slice(1));
       setRevealedCount(1);
       setHistory([nextItem]);
       setIsLocked(true);
@@ -87,7 +186,7 @@ export default function App() {
     setCurrentItem(nextItem);
     setPool(remainingPool);
     setRevealedCount(prev => prev + 1);
-    setHistory(prev => [nextItem, ...prev].slice(0, 5));
+    setHistory(prev => [nextItem, ...prev].slice(0, 13));
     setIsLocked(true);
   };
 
@@ -127,8 +226,9 @@ export default function App() {
                 className="w-full aspect-[3/4] bg-white border-2 border-emerald-100 rounded-2xl shadow-xl flex flex-col items-center justify-center p-6 text-center gap-4"
                 id="item-card"
               >
-                <div className="text-emerald-500 mb-2">
+                <div className="text-emerald-500 mb-2 flex items-center gap-2">
                   <Layers size={32} />
+                  <span className="text-lg font-bold opacity-40">#{currentItem.originalIndex}</span>
                 </div>
                 {currentItem.words.map((word, idx) => (
                   <span 
@@ -196,7 +296,7 @@ export default function App() {
 
         {/* History Indicator (Small dots) */}
         <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 13 }).map((_, i) => (
             <div 
               key={i} 
               className={`h-1 w-1 rounded-full ${i < history.length ? 'bg-emerald-400' : 'bg-slate-200'}`} 
