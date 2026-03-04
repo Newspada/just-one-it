@@ -14,6 +14,11 @@ interface Item {
   words: string[];
 }
 
+interface HistoryItem {
+  item: Item;
+  score: number | null;
+}
+
 // Static list of 110 items provided by the user
 const STATIC_ITEMS: string[][] = [
   ["BRANCH", "CINDERELLA", "CREPE", "ISLAND", "TAXI"],
@@ -147,7 +152,9 @@ export default function App() {
   const [revealedCount, setRevealedCount] = useState(0);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const [isLocked, setIsLocked] = useState(false);
-  const [history, setHistory] = useState<Item[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [totalScore, setTotalScore] = useState(0);
+  const [isAwaitingScore, setIsAwaitingScore] = useState(false);
 
   // Initialize pool
   const initializePool = useCallback(() => {
@@ -156,6 +163,8 @@ export default function App() {
     setRevealedCount(0);
     setCurrentItem(null);
     setHistory([]);
+    setTotalScore(0);
+    setIsAwaitingScore(false);
   }, []);
 
   useEffect(() => {
@@ -163,31 +172,41 @@ export default function App() {
   }, [initializePool]);
 
   const extractItem = () => {
-    if (isLocked || pool.length === 0) return;
+    if (isLocked || pool.length === 0 || isAwaitingScore) return;
+
+    let nextItem: Item;
+    let remainingPool: Item[];
 
     // If 50 items revealed, reset and reshuffle pool
     if (revealedCount >= 50) {
       const allItems = generateItems();
-      setPool(allItems);
-      setRevealedCount(0);
-      // After reset, we still want to draw one
-      const nextItem = allItems[0];
-      setCurrentItem(nextItem);
-      setPool(allItems.slice(1));
+      nextItem = allItems[0];
+      remainingPool = allItems.slice(1);
+      setPool(remainingPool);
       setRevealedCount(1);
-      setHistory([nextItem]);
-      setIsLocked(true);
-      return;
+    } else {
+      nextItem = pool[0];
+      remainingPool = pool.slice(1);
+      setPool(remainingPool);
+      setRevealedCount(prev => prev + 1);
     }
 
-    const nextItem = pool[0];
-    const remainingPool = pool.slice(1);
-
     setCurrentItem(nextItem);
-    setPool(remainingPool);
-    setRevealedCount(prev => prev + 1);
-    setHistory(prev => [nextItem, ...prev].slice(0, 13));
+    setHistory(prev => [{ item: nextItem, score: null }, ...prev].slice(0, 13));
     setIsLocked(true);
+    setIsAwaitingScore(true);
+  };
+
+  const handleScore = (score: number) => {
+    setTotalScore(prev => Math.max(0, prev + score));
+    setHistory(prev => {
+      const newHistory = [...prev];
+      if (newHistory.length > 0) {
+        newHistory[0] = { ...newHistory[0], score };
+      }
+      return newHistory;
+    });
+    setIsAwaitingScore(false);
   };
 
   const toggleLock = () => {
@@ -201,17 +220,22 @@ export default function App() {
         
         {/* Header */}
         <div className="bg-emerald-600 p-6 text-white flex justify-between items-center shadow-md">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Word Pool</h1>
-            <p className="text-xs opacity-80">Revealed: {revealedCount} / 50 (Reshuffle at 50)</p>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold tracking-tight">Just One</h1>
+            <p className="text-xs opacity-80">Revealed: {revealedCount} / 50</p>
           </div>
-          <button 
-            onClick={initializePool}
-            className="p-2 hover:bg-emerald-700 rounded-full transition-colors"
-            title="Reset Pool"
-          >
-            <RefreshCw size={20} />
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 px-3 py-1 rounded-lg text-sm font-bold">
+              Score: {totalScore}
+            </div>
+            <button 
+              onClick={initializePool}
+              className="p-2 hover:bg-emerald-700 rounded-full transition-colors"
+              title="Reset Pool"
+            >
+              <RefreshCw size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Main Content Area */}
@@ -279,29 +303,86 @@ export default function App() {
             </button>
           </div>
 
-          <button
-            onClick={extractItem}
-            disabled={isLocked}
-            id="extract-button"
-            className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
-              isLocked 
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                : 'bg-emerald-500 text-white hover:bg-emerald-600'
-            }`}
-          >
-            {isLocked ? <Lock size={20} /> : <RefreshCw size={20} className={pool.length === 0 ? 'animate-spin' : ''} />}
-            {revealedCount >= 50 ? 'Reshuffle & Extract' : 'Extract New Item'}
-          </button>
+          {isAwaitingScore ? (
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={() => handleScore(2)}
+                disabled={isLocked}
+                className={`flex-1 py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${
+                  isLocked 
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                    : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                }`}
+              >
+                +2
+              </button>
+              <button
+                onClick={() => handleScore(0)}
+                disabled={isLocked}
+                className={`flex-1 py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${
+                  isLocked 
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                    : 'bg-slate-400 text-white hover:bg-slate-500'
+                }`}
+              >
+                0
+              </button>
+              <button
+                onClick={() => handleScore(-1)}
+                disabled={isLocked}
+                className={`flex-1 py-4 rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${
+                  isLocked 
+                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                    : 'bg-rose-500 text-white hover:bg-rose-600'
+                }`}
+              >
+                -1
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={extractItem}
+              disabled={isLocked}
+              id="extract-button"
+              className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                isLocked 
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                  : 'bg-emerald-500 text-white hover:bg-emerald-600'
+              }`}
+            >
+              {isLocked ? <Lock size={20} /> : <RefreshCw size={20} className={pool.length === 0 ? 'animate-spin' : ''} />}
+              {revealedCount >= 50 ? 'Reshuffle & Extract' : 'Extract New Item'}
+            </button>
+          )}
         </div>
 
         {/* History Indicator (Small dots) */}
         <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-          {Array.from({ length: 13 }).map((_, i) => (
-            <div 
-              key={i} 
-              className={`h-1 w-1 rounded-full ${i < history.length ? 'bg-emerald-400' : 'bg-slate-200'}`} 
-            />
-          ))}
+          {Array.from({ length: 13 }).map((_, i) => {
+            // Fill from left to right: oldest on left, newest on right
+            // history[0] is newest, history[history.length-1] is oldest
+            const histIndex = history.length - 1 - i;
+            const histItem = histIndex >= 0 ? history[histIndex] : null;
+            
+            let dotColor = 'bg-slate-200';
+            let isCurrent = false;
+
+            if (histItem) {
+              // The newest item (current) is always at index 0 in our history state
+              isCurrent = histIndex === 0;
+              
+              if (histItem.score === 2) dotColor = 'bg-emerald-500';
+              else if (histItem.score === -1) dotColor = 'bg-rose-500';
+              else if (histItem.score === 0) dotColor = 'bg-slate-400';
+              else dotColor = 'bg-emerald-200'; // Waiting for score
+            }
+            return (
+              <div 
+                key={i} 
+                className={`h-1 w-1 rounded-full transition-all duration-300 ${dotColor} ${isCurrent ? 'animate-pulse scale-150' : ''}`} 
+              />
+            );
+          })}
         </div>
       </div>
 
