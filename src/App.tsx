@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 
@@ -269,6 +269,7 @@ export default function App() {
   const [revealedCount, setRevealedCount] = useState(0);
   const [currentItem, setCurrentItem] = useState<Item | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const [isBlurred, setIsBlurred] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [totalScore, setTotalScore] = useState(0);
   const [isAwaitingScore, setIsAwaitingScore] = useState(false);
@@ -277,6 +278,8 @@ export default function App() {
   const [showEn, setShowEn] = useState(false);
   const [showIt, setShowIt] = useState(true);
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
+  const [isTimerActive, setIsTimerActive] = useState(false);
 
   // Initialize pool
   const initializePool = useCallback(() => {
@@ -289,7 +292,26 @@ export default function App() {
     setIsAwaitingScore(false);
     setShowSummary(false);
     setSelectedWordIndex(null);
+    setTimeLeft(30 * 60);
+    setIsTimerActive(false);
   }, []);
+
+  // Timer logic
+  useEffect(() => {
+    if (!isTimerActive || timeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => Math.max(0, prev - 1));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isTimerActive, timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     initializePool();
@@ -320,6 +342,7 @@ export default function App() {
     setIsLocked(true);
     setIsAwaitingScore(true);
     setSelectedWordIndex(null);
+    setIsTimerActive(true);
   };
 
   const handleScore = (score: number) => {
@@ -388,6 +411,8 @@ export default function App() {
     setTotalScore(0);
     setCurrentItem(null);
     setIsLocked(false);
+    setTimeLeft(30 * 60);
+    setIsTimerActive(false);
   };
 
   const toggleLock = () => {
@@ -462,24 +487,12 @@ export default function App() {
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] max-h-[850px] relative">
         
         {/* Header */}
-        <div className="bg-emerald-600 p-4 text-white flex justify-between items-center shadow-md relative h-20">
-          {/* Left: Title and Counter */}
-          <div className="flex flex-col z-10">
-            <h1 className="text-2xl font-bold tracking-tight">Just One</h1>
-            <div className="flex items-center gap-1.5">
-              <p className="text-[10px] opacity-80">Revealed: {revealedCount} / {STATIC_ITEMS.length}</p>
-              <button 
-                onClick={initializePool}
-                disabled={isLocked}
-                className={`p-1 rounded-full transition-colors ${
-                  isLocked 
-                    ? 'opacity-40 cursor-not-allowed' 
-                    : 'hover:bg-emerald-700'
-                }`}
-                title="Reset Pool"
-              >
-                <RefreshCw size={14} />
-              </button>
+        <div className={`${timeLeft <= 0 ? 'bg-rose-600' : 'bg-emerald-600'} p-4 text-white flex justify-between items-center shadow-md relative h-20 transition-colors duration-500`}>
+          {/* Left: Timer */}
+          <div className="flex flex-col items-center z-10 min-w-[60px]">
+            <span className="text-[10px] uppercase font-bold opacity-60 leading-none mb-0.5">Time</span>
+            <div className={`text-2xl font-bold ${timeLeft <= 60 && timeLeft > 0 ? 'animate-pulse text-rose-200' : ''}`}>
+              {formatTime(timeLeft)}
             </div>
           </div>
 
@@ -491,28 +504,31 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right: Language Toggle */}
-          <div className="flex bg-white/10 p-1 rounded-xl z-10">
-            <button 
-              onClick={() => {
-                if (showIt && !showEn) return;
-                setShowIt(!showIt);
-              }}
-              className={`px-3 py-1 rounded-lg text-lg transition-all ${showIt ? 'bg-white shadow-sm' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
-              title="Italiano"
-            >
-              🇮🇹
-            </button>
-            <button 
-              onClick={() => {
-                if (showEn && !showIt) return;
-                setShowEn(!showEn);
-              }}
-              className={`px-3 py-1 rounded-lg text-lg transition-all ${showEn ? 'bg-white shadow-sm' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
-              title="English"
-            >
-              🇬🇧
-            </button>
+          {/* Right: Language Toggle and Counter */}
+          <div className="flex flex-col items-end z-10">
+            <div className="flex bg-white/10 p-1 rounded-xl mb-1">
+              <button 
+                onClick={() => {
+                  if (showIt && !showEn) return;
+                  setShowIt(!showIt);
+                }}
+                className={`px-3 py-1 rounded-lg text-lg transition-all ${showIt ? 'bg-white shadow-sm' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                title="Italiano"
+              >
+                🇮🇹
+              </button>
+              <button 
+                onClick={() => {
+                  if (showEn && !showIt) return;
+                  setShowEn(!showEn);
+                }}
+                className={`px-3 py-1 rounded-lg text-lg transition-all ${showEn ? 'bg-white shadow-sm' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                title="English"
+              >
+                🇬🇧
+              </button>
+            </div>
+            <p className="text-[10px] font-bold opacity-80">Revealed: {revealedCount} / {STATIC_ITEMS.length}</p>
           </div>
         </div>
 
@@ -525,7 +541,7 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 1.1, y: -20 }}
-                className="w-full min-h-[420px] bg-white border-2 border-emerald-100 rounded-2xl shadow-xl flex flex-col items-center justify-center p-4 text-center gap-2 sm:gap-3"
+                className={`w-full min-h-[420px] bg-white border-2 border-emerald-100 rounded-2xl shadow-xl flex flex-col items-center justify-center p-4 text-center gap-2 sm:gap-3 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}
                 id="item-card"
               >
                 <div className="text-emerald-500 mb-1 flex items-center gap-2">
@@ -568,16 +584,35 @@ export default function App() {
 
         {/* Controls */}
         <div className="pt-4 px-8 pb-8 bg-slate-50 border-t border-slate-200 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-              Safety Lock
-            </span>
+          <div className="flex items-center justify-center gap-8">
+            <button
+              onClick={() => setIsBlurred(!isBlurred)}
+              className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none shadow-inner ${
+                isBlurred ? 'bg-emerald-500' : 'bg-slate-300'
+              }`}
+              id="blur-toggle"
+              title={isBlurred ? "Show content" : "Hide content"}
+            >
+              <span
+                className={`flex h-6 w-6 transform items-center justify-center rounded-full bg-white shadow-sm transition-transform ${
+                  isBlurred ? 'translate-x-7' : 'translate-x-1'
+                }`}
+              >
+                {isBlurred ? (
+                  <EyeOff size={14} strokeWidth={2.5} className="text-emerald-500" />
+                ) : (
+                  <Eye size={14} strokeWidth={2.5} className="text-slate-400" />
+                )}
+              </span>
+            </button>
+
             <button
               onClick={toggleLock}
               className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none shadow-inner ${
                 isLocked ? 'bg-rose-500' : 'bg-slate-300'
               }`}
               id="lock-toggle"
+              title={isLocked ? "Unlock controls" : "Lock controls"}
             >
               <span
                 className={`flex h-6 w-6 transform items-center justify-center rounded-full bg-white shadow-sm transition-transform ${
