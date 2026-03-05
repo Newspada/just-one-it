@@ -379,24 +379,33 @@ export default function App() {
         setSummaryData({ total: nextTotal, correct, skipped, errors });
         setShowSummary(true);
         
-        // Fireworks!
-        const duration = 3 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+        // Fireworks based on score
+        if (nextTotal >= 4) {
+          const isPerfect = nextTotal === 13;
+          const isHigh = nextTotal >= 11;
+          const isMid = nextTotal >= 7;
+          
+          const duration = isPerfect ? 7 * 1000 : isHigh ? 5 * 1000 : isMid ? 3 * 1000 : 1.5 * 1000;
+          const multiplier = isPerfect ? 150 : isHigh ? 100 : isMid ? 50 : 20;
+          const shapes = (isPerfect ? ['star', 'circle'] : ['circle', 'square']) as any[];
+          
+          const animationEnd = Date.now() + duration;
+          const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100, shapes };
 
-        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+          const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
-        const interval: any = setInterval(function() {
-          const timeLeft = animationEnd - Date.now();
+          const interval: any = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
 
-          if (timeLeft <= 0) {
-            return clearInterval(interval);
-          }
+            if (timeLeft <= 0) {
+              return clearInterval(interval);
+            }
 
-          const particleCount = 50 * (timeLeft / duration);
-          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-        }, 250);
+            const particleCount = multiplier * (timeLeft / duration);
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+          }, 250);
+        }
       }
 
       return newHistory;
@@ -419,6 +428,14 @@ export default function App() {
     setIsLocked(!isLocked);
   };
 
+  const summaryTheme = summaryData.total >= 11 
+    ? { bg: 'bg-yellow-500', text: 'text-yellow-600', btn: 'bg-yellow-500', hover: 'hover:bg-yellow-600' }
+    : summaryData.total >= 7
+    ? { bg: 'bg-emerald-600', text: 'text-emerald-600', btn: 'bg-emerald-500', hover: 'hover:bg-emerald-600' }
+    : summaryData.total >= 4
+    ? { bg: 'bg-amber-500', text: 'text-amber-600', btn: 'bg-amber-500', hover: 'hover:bg-amber-600' }
+    : { bg: 'bg-rose-600', text: 'text-rose-600', btn: 'bg-rose-500', hover: 'hover:bg-rose-600' };
+
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21]">
       {/* Summary Modal */}
@@ -431,7 +448,7 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
             >
-              <div className="bg-emerald-600 p-8 text-white text-center">
+              <div className={`${summaryTheme.bg} p-8 text-white text-center transition-colors duration-500`}>
                 <div className="mx-auto w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
                   <Trophy size={32} />
                 </div>
@@ -450,7 +467,7 @@ export default function App() {
               <div className="p-8 space-y-6">
                 <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <span className="text-slate-500 font-medium">Total Score</span>
-                  <span className="text-3xl font-black text-emerald-600">{summaryData.total}</span>
+                  <span className={`text-3xl font-black ${summaryTheme.text}`}>{summaryData.total}</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
@@ -473,7 +490,7 @@ export default function App() {
 
                 <button
                   onClick={closeSummary}
-                  className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-emerald-600 active:scale-95 transition-all"
+                  className={`w-full py-4 ${summaryTheme.btn} ${summaryTheme.hover} text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all`}
                 >
                   Restart
                 </button>
@@ -499,9 +516,10 @@ export default function App() {
           {/* Center: Large Score */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0">
             <span className="text-[10px] uppercase font-bold opacity-60 leading-none mb-0.5">Score</span>
-            <div className="text-3xl font-black tracking-tighter">
+            <div className="text-3xl font-black tracking-tighter leading-none">
               {totalScore}
             </div>
+            <p className="text-[10px] font-bold opacity-80 mt-1">Remaining: {Math.max(0, 13 - history.length)}</p>
           </div>
 
           {/* Right: Language Toggle and Counter */}
