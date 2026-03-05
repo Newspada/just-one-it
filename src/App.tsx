@@ -37,7 +37,7 @@ const STATIC_ITEMS: string[][] = [
   ["EPIPHANY", "ELASTIC", "PAN", "FLASH", "TUNNEL"],
   ["FOX", "POLICE", "SIMPSON", "LIGHTNING", "NEWSPAPER"],
   ["MOUNTAIN", "PEANUT", "LIGHTBULB", "JEDI", "PIMENTO"],
-  ["SOMBRERO", "CLOVER", "BUTTON", "CHEESE", "TEDDY BEAR"],
+  ["SOMBRERO", "CLOVER", "BUTTON", "CHEESE", "CHEWBECCA"],
   ["GOKU", "DOCTOR", "STRAWBERRY", "NUCLEAR", "LOTTERY"],
   ["CEMETERY", "CUPID", "UMBRELLA", "LEAP", "ROOT"],
   ["TREASURE", "PILOT", "MICKEY", "SEWER", "GALAXY"],
@@ -73,10 +73,10 @@ const STATIC_ITEMS: string[][] = [
   ["OVEN", "SOCKET", "EASTER", "HOSE", "RAIL"],
   ["BUTTERFLY", "POWDER", "PORCELAIN", "MARKET", "COCOON"],
   ["BARBECUE", "PANDA", "DREAM", "MARRIAGE", "BELLYBUTTON"],
-  ["CAVITY", "SLEEVE", "GREMLINS", "POKER", "PIE"],
-  ["SUGAR", "THEATER", "SHOVEL", "DUNE", "PREGNANT"],
+  ["CAVITY", "SLEEVE", "BOTTOM", "POKER", "PIE"],
+  ["SUGAR", "THEATER", "SHOVEL", "DUNE", "VOLUME"],
   ["CAT", "PALACE", "ELECTION", "HONEY", "RAMBO"],
-  ["REGGAE", "MANURE", "LAKE", "MONKEY", "LIGHTHOUSE"],
+  ["FLORA", "BEEF", "LAKE", "MONKEY", "LIGHTHOUSE"],
   ["NEIGHBORHOOD", "ROCK", "TIGER", "NEEDLE", "SOAP"],
   ["PRISON", "HOLE", "PUNK", "EVENING", "MAP"],
   ["NUMBER", "DECATHLON", "RUM", "METAL", "TUNA"],
@@ -101,12 +101,12 @@ const STATIC_ITEMS: string[][] = [
   ["PUPPET", "GAME", "ROME", "SAFE", "PLANE"],
   ["BRAIN", "MASK", "CONCERT", "SPAIN", "SHARK"],
   ["LONELY", "POTATO", "WAVE", "SCHOOL", "LEGO"],
-  ["TOKYO", "HEEL", "CHICKEN", "HELICOPTER", "COLONEL"],
+  ["TOKYO", "HEEL", "CHICKEN", "HELICOPTER", "GENERAL"],
   ["TRADITION", "SNAKE", "CUP", "PICASSO", "WATCH"],
-  ["CAKE", "HORSE", "MEXICO", "WHITE", "BALD"],
+  ["CAKE", "HORSE", "EUROPE", "WHITE", "BALD"],
   ["GREEN", "HUMOR", "CORNER", "ANTARCTICA", "SAUSAGE"],
   ["PLASTIC", "RAY", "CARTON", "PEBBLE", "EVEREST"],
-  ["TERMINATOR", "LETTER", "BED", "PARADISE", "EGG"],
+  ["TAIL", "LETTER", "BED", "PARADISE", "EGG"],
   ["NINTENDO", "BET", "SALT", "MANUAL", "FROST"],
   ["HOUSE", "GODFATHER", "WAR", "ROPE", "WINE"],
   ["CLUB", "CHRISTMAS", "FASHION", "STATION", "LAMP"],
@@ -117,18 +117,18 @@ const STATIC_ITEMS: string[][] = [
   ["TANGO", "RIPE", "TEMPLE", "SAND", "FRIES"],
   ["GRENADE", "STUFFING", "BRUSH", "PIG", "HUMAN"],
   ["ALCATRAZ", "SMOKE", "HAZELNUT", "DIAMOND", "ROSE"],
-  ["GODZILLA", "UNIFORM", "RAIN", "FIRE", "HELMET"],
+  ["TRUMPET", "UNIFORM", "RAIN", "FIRE", "HELMET"],
   ["SHIP", "BOWLING", "CHURCH", "NET", "SPY"],
   ["HALLOWEEN", "AZZURRO", "BABY", "CANTEEN", "PAIR"],
-  ["FAILURE", "HISTORY", "BEER", "DISCO", "PRESIDENT"],
+  ["SEA", "HISTORY", "BEER", "DISCO", "PRESIDENT"],
   ["MIRROR", "PROM", "BATH", "PIT", "FAIRY"],
-  ["LADDER", "ANGEL", "MAD", "HAIR", "MATRIX"],
+  ["LADDER", "ANGEL", "KEY", "HAIR", "MATRIX"],
   ["MUSTACHE", "BUBBLE", "CHAIN", "ELVIS", "COOKIE"],
   ["AVATAR", "MILL", "JUNGLE", "NUN", "FIRECRACKER"],
   ["IRON", "BATMAN", "SONG", "NILE", "CINEMA"],
   ["FERRARI", "ALADDIN", "TUBE", "BELT", "BAR"],
-  ["MOUTH", "CAROUSEL", "DICE", "GRASS", "FALL"],
-  ["DOPING", "GARLIC", "CUBE", "VIOLET", "MILK"],
+  ["MOUTH", "CAROUSEL", "DAISY", "GRASS", "FALL"],
+  ["MONEY", "GARLIC", "CUBE", "VIOLET", "MILK"],
   ["ICE", "FLUTE", "CHAMPAGNE", "SAFARI", "ALIEN"],
   ["CANE", "MUSKETEER", "THREAD", "TULIP", "IKEA"],
   ["BREAKFAST", "GHOST", "STRAW", "NAIL", "POTTER"],
@@ -137,10 +137,10 @@ const STATIC_ITEMS: string[][] = [
 
 const STATIC_ITEMS_IT: string[][] = [
   ["RAMO", "CENERENTOLA", "CREPE", "ISOLA", "TAXI"],
-  ["VELA", "PARMIGIANO", "SHREK", "PALE", "WESTERN"],
+  ["VELA", "PARMIGIANO", "SHREK", "PALO", "AZIONE"],
   ["CALCIO", "ALLARME", "DANZA", "HULK", "DESERTO"],
   ["OBIETTIVO", "PANE", "DIAVOLO", "PRIMARIA", "TARZAN"],
-  ["VITE", "RASTRELLO", "COMPUTER", "MC DONALD'S", "PALLA"],
+  ["VITE", "RASTRELLO", "COMPUTER", "MCDONALD'S", "PALLA"],
   ["SERIE", "NIDO", "SPEZIE", "ELEFANTE", "CARNEVALE"],
   ["VENDETTA", "CAPO", "EMERGENZA", "CROCE", "VALZER"],
   ["MAFIA", "GROSSO", "MISSILE", "MICROSOFT", "SCI"],
@@ -158,11 +158,11 @@ const STATIC_ITEMS_IT: string[][] = [
   ["GRU", "OPERAZIONE", "RAP", "MUSA", "DIFESA"],
   ["LUCE", "DIVANO", "MOZART", "ANELLO", "PIZZA"],
   ["CAVALIERE", "PACE", "FIORE", "SVIZZERA", "CALENDARIO"],
-  ["SCIROPPO", "FORESTA", "BILANCIA", "ZEUS", "SCARAFAGGIO"],
+  ["SCIROPPO", "FORESTA", "BILANCIA", "ZEUS", "VESPA"],
   ["PIRATA", "VACANZA", "ELFO", "CALAMITA", "FORCHETTA"],
   ["BENIGNI", "VULCANO", "PASSIONE", "GALLO", "ELETTRICITÀ"],
   ["FORNAIO", "PROFUMO", "FIAMMA", "ZOMBIE", "JOKER"],
-  ["VELENO", "STELLA", "LUPO", "GARIBALDI", "ANNIVERSARIO"],
+  ["VELENO", "STELLA", "LUPO", "GARIBALDI", "COMPLEANNO"],
   ["MARTELLO", "PEPERONCINO", "BOLOGNA", "IMPERATORE", "PAPA"],
   ["HOLLYWOOD", "ZANZARA", "LANCIA", "BORSA", "FINE"],
   ["TAVOLO", "POMPIERE", "BICCHIERE", "SUSHI", "GRECIA"],
@@ -172,54 +172,54 @@ const STATIC_ITEMS_IT: string[][] = [
   ["DINOSAURO", "GIALLO", "FUNGO", "PICCIONE", "PIKACHU"],
   ["TUONO", "GIARDINO", "DIPINTO", "GRATTACIELO", "TREGUA"],
   ["MUMMIA", "BATTERIA", "FIERA", "KARATE", "PAPPAGALLO"],
-  ["OLIMPIADI", "ARRAMPICATA", "AVVOCATO", "DANTE ALIGHIERI", "FIUME"],
+  ["OLIMPIADI", "ARRAMPICATA", "AVVOCATO", "DANTE", "FIUME"],
   ["TAPPETO", "PONY", "CORONA", "NUOVO", "TARANTINO"],
   ["BARBIE", "CIOCCOLATO", "NEVE", "CRAVATTA", "VENTO"],
   ["PENSIERO", "FRANKENSTEIN", "MENSOLA", "ACCESSORIO", "DOCCIA"],
-  ["STUFATO", "CANADA", "ZOO", "TUBO", "LIBRO"],
-  ["ASCIUGAMANO", "VENERE", "POLPO", "BICICLETTA", "OPERA"],
+  ["PROCESSO", "CANADA", "ZOO", "TUBO", "LIBRO"],
+  ["PEDONE", "VENERE", "POLPO", "BICICLETTA", "OPERA"],
   ["COCCINELLA", "SENAPE", "SHERLOCK", "BOTTIGLIA", "VIRUS"],
   ["MUSICA", "GOLA", "AMERICA", "CAFFÈ", "FEBBRE"],
   ["GOOGLE", "FIOCCO", "MARTE", "GOLF", "BIGLIETTO"],
-  ["REGISTRATORE", "PLAYSTATION", "BIONDA", "IRIS", "ARTO"],
-  ["GERRY SCOTTI", "NINJA", "TRAPUNTA", "CACCIATORE", "VERDURA"],
+  ["REGISTRATORE", "PLAYSTATION", "BIONDA", "CRESTA", "ARTO"],
+  ["SANREMO", "NINJA", "TRAPUNTA", "CACCIATORE", "VERDURA"],
   ["FORNO", "SPINA", "PASQUA", "TUBO", "FERROVIA"],
-  ["FARFALLA", "CIPRIA", "PORCELLANA", "MERCATO", "BOZZOLO"],
+  ["FARFALLA", "POLVERE", "PORCELLANA", "MERCATO", "PIANO"],
   ["BARBECUE", "PANDA", "SOGNO", "MATRIMONIO", "OMBELICO"],
-  ["CARIE", "MANICA", "GREMLINS", "POKER", "TORTA"],
-  ["ZUCCHERO", "TEATRO", "PALA", "DUNA", "INCINTA"],
-  ["GATTO", "PALAZZO", "ELEZIONI", "MIELE", "DON MATTEO"],
-  ["REGGAE", "LETAME", "LAGO", "SCIMMIA", "FARO"],
+  ["DENTE", "MANICA", "FONDO", "POKER", "TORTA"],
+  ["ZUCCHERO", "TEATRO", "PALA", "DUNA", "VOLUME"],
+  ["GATTO", "PALAZZO", "ELEZIONI", "MIELE", "MATTEO"],
+  ["FLORA", "MUCCA", "LAGO", "SCIMMIA", "FARO"],
   ["QUARTIERE", "ROCK", "TIGRE", "AGO", "SAPONE"],
   ["PRIGIONE", "BUCO", "MARANZA", "SERA", "MAPPA"],
   ["NUMERO", "DECATHLON", "LIQUORE", "METALLO", "TONNO"],
-  ["RE", "BALLETTO", "BAND", "ALCOL", "LAVA"],
+  ["RE", "BALLETTO", "BANDA", "ALCOL", "LAVA"],
   ["TELA", "VAMPIRO", "MONOPOLI", "FUMETTO", "HOTEL"],
   ["DARWIN", "POMODORO", "PARACADUTE", "CANNONE", "BINOCOLO"],
-  ["MIRAGGIO", "RAMSES", "FALÒ", "INCROCIO", "PRINCIPESSA"],
+  ["MIRAGGIO", "EGITTO", "FALÒ", "INCROCIO", "PRINCIPESSA"],
   ["GHIGLIOTTINA", "MAGO", "BIBITA", "BANANA", "MARCO"],
   ["CESARE", "SPAGHETTI", "CAPPELLO", "DENTISTA", "GRANO"],
-  ["CONCHIGLIE", "SHAKESPEARE", "GIGANTE", "SCHIUMA", "GROTTA"],
+  ["CONCHIGLIA", "SHAKESPEARE", "GIGANTE", "SCHIUMA", "GROTTA"],
   ["COLTELLO", "CUSCINO", "MANGO", "SPADA", "VOLO"],
-  ["ESPLOSIONE", "PINGUINO", "TELEFONO", "GANDHI", "OASI"],
-  ["COCCODRILLO", "GIOIELLO", "METROPOLITANA", "OCCHIALI", "LUCA"],
-  ["MINA", "SIGARETTA", "BRACCIALETTO", "METEO", "TORRE"],
+  ["ESPLOSIONE", "PINGUINO", "TELEFONO", "GANDHI", "COLLO"],
+  ["COCCODRILLO", "GIOIELLO", "METRO", "OCCHIALI", "LUCA"],
+  ["MINA", "SIGARETTA", "BRACCIALETTO", "TEMPO", "TORRE"],
   ["TATUAGGIO", "GERMANIA", "MELA", "SIRENA", "BOXE"],
-  ["CUORE", "MOSCA", "PISCINA", "UNICORNO", "ARANCIA"],
+  ["CUORE", "MOSCA", "PISCINA", "UNICORNO", "ARANCIO"],
   ["MELONE", "ANCORA", "ISRAELE", "CACTUS", "TENNIS"],
   ["PEPE", "TRIANGOLO", "BAMBOLA", "ITALIA", "SCENA"],
-  ["POLARE", "TOPO", "COLLANA", "FATTORIA", "BELGIO"],
-  ["FRANCIA", "LUNA", "CAFFETTERIA", "MANICO", "ATTREZZO"],
+  ["POLO", "TOPO", "COLLANA", "FATTORIA", "BELGIO"],
+  ["FRANCIA", "LUNA", "CUCCHIAIO", "MANICO", "ATTREZZO"],
   ["CORDA", "AUSTRALIA", "CASTELLO", "GUARDIA", "PECORA"],
-  ["MARIONETTA", "GIOCO", "ROMA", "CASSAFORTE", "AEREO"],
+  ["MARIONETTA", "GIOCO", "ROMA", "CASSA", "AEREO"],
   ["CERVELLO", "MASCHERA", "CONCERTO", "SPAGNA", "SQUALO"],
   ["SOLO", "PATATA", "ONDA", "SCUOLA", "LEGO"],
-  ["TOKYO", "TACCO", "POLLO", "ELICOTTERO", "COLONNELLO"],
+  ["TOKYO", "TACCO", "POLLO", "ELICOTTERO", "GENERALE"],
   ["TRADIZIONE", "SERPENTE", "TAZZA", "PICASSO", "OROLOGIO"],
-  ["TORTA", "CAVALLO", "MESSICO", "BIANCO", "CALVO"],
-  ["VERDE", "UMORISMO", "ANGOLO", "ANTARTIDE", "SALSICCIA"],
+  ["TORTA", "CAVALLO", "EUROPA", "BIANCO", "CALVO"],
+  ["VERDE", "ASSO", "ANGOLO", "ANTARTIDE", "SALSICCIA"],
   ["PLASTICA", "RAGGIO", "CARTONE", "SASSO", "EVEREST"],
-  ["TERMINATOR", "LETTERA", "LETTO", "PARADISO", "UOVO"],
+  ["CODA", "LETTERA", "LETTO", "PARADISO", "UOVO"],
   ["NINTENDO", "SCOMMESSA", "SALE", "MANUALE", "FREDDO"],
   ["CASA", "PADRINO", "GUERRA", "CORDA", "VINO"],
   ["CLUB", "NATALE", "MODA", "STAZIONE", "LAMPADA"],
@@ -228,23 +228,23 @@ const STATIC_ITEMS_IT: string[][] = [
   ["NANO", "CIRCO", "PRETE", "TAGLIAERBA", "PIETRA"],
   ["TRENO", "GAMBERO", "STANZA", "CLEOPATRA", "FINESTRA"],
   ["TANGO", "MATURO", "TEMPIO", "SABBIA", "PATATINE"],
-  ["GRANATA", "RIPIENO", "SPAZZOLA", "MAIALE", "UMANO"],
+  ["GRANATA", "RIPIENO", "SPAZZOLA", "MAIALE", "UOMO"],
   ["ALCATRAZ", "FUMO", "NOCCIOLA", "DIAMANTE", "ROSA"],
-  ["GODZILLA", "UNIFORME", "PIOGGIA", "FUOCO", "CASCO"],
+  ["TROMBA", "UNIFORME", "PIOGGIA", "FUOCO", "CASCO"],
   ["NAVE", "BOWLING", "CHIESA", "RETE", "SPIA"],
   ["HALLOWEEN", "AZZURRO", "BAMBINO", "BORRACCIA", "COPPIA"],
-  ["FALLIMENTO", "STORIA", "BIRRA", "DISCOTECA", "PRESIDENTE"],
+  ["MARE", "STORIA", "BIRRA", "DISCOTECA", "PRESIDENTE"],
   ["SPECCHIO", "CAPODANNO", "BAGNO", "FOSSO", "FATA"],
-  ["SCALA", "ANGELO", "PAZZO", "CAPELLI", "MATRIX"],
+  ["SCALA", "ANGELO", "CHIAVE", "CAPELLI", "NEO"],
   ["BAFFI", "BOLLA", "CATENA", "ALBANO", "BISCOTTO"],
   ["AVATAR", "MULINO", "GIUNGLA", "SUORA", "PETARDO"],
   ["FERRO", "BATMAN", "CANZONE", "NILO", "CINEMA"],
   ["FERRARI", "ALADDIN", "TUBO", "CINTURA", "BAR"],
-  ["BOCCA", "GIOSTRA", "DADO", "ERBA", "CADUTA"],
-  ["DOPING", "AGLIO", "CUBETTO", "VIOLA", "LATTE"],
+  ["BOCCA", "GIOSTRA", "MARGHERITA", "ERBA", "CADUTA"],
+  ["DENARO", "AGLIO", "DADO", "VIOLA", "LATTE"],
   ["GHIACCIO", "FLAUTO", "CHAMPAGNE", "SAFARI", "ALIENO"],
   ["BASTONE", "MOSCHETTIERE", "FILO", "TULIPANO", "IKEA"],
-  ["COLAZIONE", "FANTASMA", "PAGLIA", "CHIODO", "POTTER"],
+  ["COLAZIONE", "FANTASMA", "NODO", "CHIODO", "POTTER"],
   ["ALESSANDRO", "PELLICCIA", "TORNADO", "PIRAMIDE", "ALLEANZA"]
 ];
 
@@ -432,17 +432,17 @@ export default function App() {
                   <div className="flex flex-col items-center p-3 bg-emerald-50 rounded-xl border border-emerald-100">
                     <CheckCircle2 className="text-emerald-500 mb-1" size={20} />
                     <span className="text-xl font-black text-emerald-600">{summaryData.correct}</span>
-                    <span className="text-[10px] uppercase font-bold text-emerald-700">Corrette</span>
+                    <span className="text-[10px] uppercase font-bold text-emerald-700">Correct</span>
                   </div>
                   <div className="flex flex-col items-center p-3 bg-slate-50 rounded-xl border border-slate-200">
                     <MinusCircle className="text-slate-400 mb-1" size={20} />
                     <span className="text-xl font-black text-slate-600">{summaryData.skipped}</span>
-                    <span className="text-[10px] uppercase font-bold text-slate-500">Saltate</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500">Skipped</span>
                   </div>
                   <div className="flex flex-col items-center p-3 bg-rose-50 rounded-xl border border-rose-100">
                     <XCircle className="text-rose-500 mb-1" size={20} />
                     <span className="text-xl font-black text-rose-600">{summaryData.errors}</span>
-                    <span className="text-[10px] uppercase font-bold text-rose-700">Errori</span>
+                    <span className="text-[10px] uppercase font-bold text-rose-700">Mistakes</span>
                   </div>
                 </div>
 
@@ -604,7 +604,7 @@ export default function App() {
                     : 'bg-emerald-500 text-white hover:bg-emerald-600'
                 }`}
               >
-                <span className="text-[10px] uppercase opacity-80 mb-1">Corretto</span>
+                <span className="text-[10px] uppercase opacity-80 mb-1">Correct</span>
                 <span className="text-xl">+1</span>
               </button>
               <button
@@ -616,7 +616,7 @@ export default function App() {
                     : 'bg-slate-400 text-white hover:bg-slate-500'
                 }`}
               >
-                <span className="text-[10px] uppercase opacity-80 mb-1">Non risponde</span>
+                <span className="text-[10px] uppercase opacity-80 mb-1">Skipped</span>
                 <span className="text-xl">0</span>
               </button>
               <button
@@ -628,7 +628,7 @@ export default function App() {
                     : 'bg-rose-500 text-white hover:bg-rose-600'
                 }`}
               >
-                <span className="text-[10px] uppercase opacity-80 mb-1">Errato</span>
+                <span className="text-[10px] uppercase opacity-80 mb-1">Wrong</span>
                 <span className="text-xl">0</span>
               </button>
             </div>
