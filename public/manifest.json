@@ -8,13 +8,8 @@
   "theme_color": "#10B981",
   "icons": [
     {
-      "src": "https://picsum.photos/seed/game/192/192",
+      "src": "/icon.png",
       "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://picsum.photos/seed/game/512/512",
-      "sizes": "512x512",
       "type": "image/png"
     }
   ]

@@ -439,7 +439,7 @@ export default function App() {
     : { bg: 'bg-rose-600', text: 'text-rose-600', btn: 'bg-rose-500', hover: 'hover:bg-rose-600' };
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21]">
+    <div className="h-[100dvh] w-full bg-[#F0F2F5] flex flex-col items-center justify-center p-0 sm:p-4 font-sans text-[#1C1E21] overflow-hidden">
       {/* Settings Modal */}
       <AnimatePresence>
         {showSettings && (
@@ -448,9 +448,9 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="p-6 space-y-6">
+              <div className="p-6 space-y-6 overflow-y-auto">
                 {/* Language Settings */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Languages</h3>
@@ -528,9 +528,9 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className={`${summaryTheme.bg} p-8 text-white text-center transition-colors duration-500`}>
+              <div className={`${summaryTheme.bg} p-8 text-white text-center transition-colors duration-500 shrink-0`}>
                 <div className="mx-auto w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
                   <Trophy size={32} />
                 </div>
@@ -546,7 +546,7 @@ export default function App() {
                 </p>
               </div>
               
-              <div className="p-8 space-y-6">
+              <div className="p-8 space-y-6 overflow-y-auto">
                 <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <span className="text-slate-500 font-medium">Total Score</span>
                   <span className={`text-3xl font-black ${summaryTheme.text}`}>{summaryData.total}</span>
@@ -582,8 +582,8 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Android-style Status Bar Area (Visual only) */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] max-h-[850px] relative">
+      {/* Main Container */}
+      <div className="w-full max-w-md bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-full sm:h-[90vh] sm:max-h-[850px] relative">
         
         {/* Header */}
         <div className={`${timeLeft <= 0 ? 'bg-rose-600' : 'bg-emerald-600'} p-4 text-white flex justify-between items-center shadow-md relative h-20 transition-colors duration-500`}>
@@ -617,7 +617,7 @@ export default function App() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
           <AnimatePresence mode="wait">
             {currentItem ? (
               <motion.div
@@ -625,7 +625,7 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 1.1, y: -20 }}
-                className={`w-full min-h-[420px] bg-white border-2 border-emerald-100 rounded-2xl shadow-xl flex flex-col items-center justify-center p-4 text-center gap-2 sm:gap-3 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}
+                className={`w-full flex-1 bg-white border-2 border-emerald-100 rounded-2xl shadow-xl flex flex-col items-center justify-center p-4 text-center gap-2 sm:gap-3 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}
                 id="item-card"
               >
                 <div className="text-emerald-500 mb-1 flex items-center gap-2">
@@ -667,7 +667,7 @@ export default function App() {
         </div>
 
         {/* Controls */}
-        <div className="pt-4 px-8 pb-8 bg-slate-50 border-t border-slate-200 flex flex-col gap-4">
+        <div className="pt-4 px-4 sm:px-8 pb-4 sm:pb-8 bg-slate-50 border-t border-slate-200 flex flex-col gap-4">
           <div className="flex items-center justify-center gap-8">
             <button
               onClick={() => setIsBlurred(!isBlurred)}
