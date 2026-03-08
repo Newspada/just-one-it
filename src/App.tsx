@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, FastForward } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 
@@ -19,6 +19,7 @@ interface Item {
 interface HistoryItem {
   item: Item | null;
   score: number | null;
+  selectedWordIndex: number | null;
 }
 
 // Static list of 110 items provided by the user
@@ -282,6 +283,7 @@ export default function App() {
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [autoHighlight, setAutoHighlight] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [viewingIndex, setViewingIndex] = useState(0);
 
   // Initialize pool
   const initializePool = useCallback(() => {
@@ -339,11 +341,17 @@ export default function App() {
       setRevealedCount(prev => prev + 1);
     }
 
+    const newItem: HistoryItem = { 
+      item: nextItem, 
+      score: null, 
+      selectedWordIndex: autoHighlight ? Math.floor(Math.random() * 5) : null 
+    };
     setCurrentItem(nextItem);
-    setHistory(prev => [{ item: nextItem, score: null }, ...prev]);
+    setHistory(prev => [newItem, ...prev]);
+    setViewingIndex(0);
     setIsLocked(true);
     setIsAwaitingScore(true);
-    setSelectedWordIndex(autoHighlight ? Math.floor(Math.random() * 5) : null);
+    setSelectedWordIndex(newItem.selectedWordIndex);
     setIsTimerActive(true);
   };
 
@@ -368,7 +376,7 @@ export default function App() {
 
       if (isPenalty) {
         // Add a penalty card (null item)
-        const penaltyEntry: HistoryItem = { item: null, score: 0 };
+        const penaltyEntry: HistoryItem = { item: null, score: 0, selectedWordIndex: null };
         newHistory = [penaltyEntry, ...newHistory];
       }
 
@@ -428,6 +436,34 @@ export default function App() {
 
   const toggleLock = () => {
     setIsLocked(!isLocked);
+  };
+
+  const handleDragEnd = (event: any, info: any) => {
+    const swipeThreshold = 50;
+    if (info.offset.x > swipeThreshold && viewingIndex < history.length - 1) {
+      // Swipe Right -> Go to older cards
+      setViewingIndex(prev => prev + 1);
+    } else if (info.offset.x < -swipeThreshold && viewingIndex > 0) {
+      // Swipe Left -> Go to newer cards
+      setViewingIndex(prev => prev - 1);
+    }
+  };
+
+  const handleWordSelect = (idx: number) => {
+    // Only allow changing the word for the current card (viewingIndex 0)
+    if (viewingIndex !== 0) return;
+    
+    const newIndex = selectedWordIndex === idx ? null : idx;
+    setSelectedWordIndex(newIndex);
+    
+    // Update history for the current card
+    setHistory(prev => {
+      const newHistory = [...prev];
+      if (newHistory.length > 0) {
+        newHistory[0] = { ...newHistory[0], selectedWordIndex: newIndex };
+      }
+      return newHistory;
+    });
   };
 
   const summaryTheme = summaryData.total >= 11 
@@ -617,41 +653,87 @@ export default function App() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
-          <AnimatePresence mode="wait">
-            {currentItem ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+          <div className="flex-1 w-full flex items-center justify-center p-2">
+            <AnimatePresence mode="wait">
+            {history.length > 0 ? (
               <motion.div
-                key={currentItem.id}
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 1.1, y: -20 }}
-                className={`w-full min-h-[420px] bg-white border-2 border-emerald-100 rounded-2xl shadow-xl flex flex-col items-center justify-center p-4 text-center gap-2 sm:gap-3 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}
+                key={history[viewingIndex]?.item?.id || `penalty-${viewingIndex}`}
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                onDragEnd={handleDragEnd}
+                className={`w-full max-w-md min-h-[350px] border-2 rounded-2xl shadow-xl flex flex-col items-center justify-center p-6 text-center gap-2 sm:gap-3 transition-all duration-300 cursor-grab active:cursor-grabbing relative m-1 ${
+                  isBlurred ? 'blur-md select-none' : ''
+                } ${
+                  viewingIndex === 0 
+                    ? 'bg-white border-emerald-100' 
+                    : history[viewingIndex].item === null
+                      ? 'bg-white border-rose-200'
+                      : history[viewingIndex].score === 1
+                        ? 'bg-emerald-50/80 border-emerald-200'
+                        : history[viewingIndex].score === -1
+                          ? 'bg-rose-50/80 border-rose-200'
+                          : 'bg-slate-100/90 border-slate-300'
+                }`}
                 id="item-card"
               >
-                <div className="text-emerald-500 mb-1 flex items-center gap-2">
-                  <Layers size={28} />
-                  <span className="text-base font-bold opacity-40">#{currentItem.originalIndex}</span>
-                </div>
-                {currentItem.words.map((word, idx) => (
-                  <button 
-                    key={idx} 
-                    onClick={() => setSelectedWordIndex(selectedWordIndex === idx ? null : idx)}
-                    className={`flex flex-col items-center leading-tight transition-all duration-200 focus:outline-none ${
-                      selectedWordIndex === idx ? 'scale-120' : 'scale-100 opacity-60 hover:opacity-100'
-                    }`}
+                {history[viewingIndex]?.item ? (
+                  <>
+                    <div className="text-emerald-500 mb-1 flex items-center gap-2">
+                      <Layers size={28} />
+                      <span className="text-base font-bold opacity-40">#{history[viewingIndex].item?.originalIndex}</span>
+                    </div>
+                    {history[viewingIndex].item?.words.map((word, idx) => {
+                      const isSelected = viewingIndex === 0 
+                        ? selectedWordIndex === idx 
+                        : history[viewingIndex].selectedWordIndex === idx;
+                        
+                      return (
+                        <button 
+                          key={idx} 
+                          onClick={() => handleWordSelect(idx)}
+                          className={`flex flex-col items-center leading-tight transition-all duration-200 focus:outline-none ${
+                            isSelected ? 'scale-120' : 'scale-100 opacity-60 hover:opacity-100'
+                          }`}
+                        >
+                          {showIt && (
+                            <span className={`${isSelected ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl'} font-bold capitalize text-slate-800 tracking-wide transition-all`}>
+                              {history[viewingIndex].item?.wordsIt[idx]}
+                            </span>
+                          )}
+                          {showEn && (
+                            <span className={`${showIt ? (isSelected ? 'text-sm sm:text-base' : 'text-xs sm:text-sm') : (isSelected ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl')} font-semibold ${showIt ? 'text-slate-400' : 'text-slate-800'} capitalize tracking-wide transition-all`}>
+                              {word}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center text-rose-500">
+                    <XCircle size={64} className="mb-4 opacity-20" />
+                    <p className="text-xl font-black uppercase">Penalty Card</p>
+                    <p className="text-sm opacity-60">This card was added due to a mistake</p>
+                  </div>
+                )}
+
+                {viewingIndex > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewingIndex(0);
+                    }}
+                    className="absolute bottom-6 right-6 p-3 bg-emerald-500 text-white rounded-full shadow-lg hover:bg-emerald-600 active:scale-90 transition-all z-10"
+                    title="Back to Current"
                   >
-                    {showIt && (
-                      <span className={`${selectedWordIndex === idx ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl'} font-bold capitalize text-slate-800 tracking-wide transition-all`}>
-                        {currentItem.wordsIt[idx]}
-                      </span>
-                    )}
-                    {showEn && (
-                      <span className={`${showIt ? (selectedWordIndex === idx ? 'text-sm sm:text-base' : 'text-xs sm:text-sm') : (selectedWordIndex === idx ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl')} font-semibold ${showIt ? 'text-slate-400' : 'text-slate-800'} capitalize tracking-wide transition-all`}>
-                        {word}
-                      </span>
-                    )}
+                    <FastForward size={20} />
                   </button>
-                ))}
+                )}
               </motion.div>
             ) : (
               <motion.div 
@@ -663,7 +745,8 @@ export default function App() {
                 <p className="text-lg font-medium">Tap the button to start a new game</p>
               </motion.div>
             )}
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Controls */}
@@ -716,9 +799,9 @@ export default function App() {
             <div className="flex gap-2 w-full">
               <button
                 onClick={() => handleScore(1)}
-                disabled={isLocked}
+                disabled={isLocked || viewingIndex !== 0}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
-                  isLocked 
+                  (isLocked || viewingIndex !== 0)
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                     : 'bg-emerald-500 text-white hover:bg-emerald-600'
                 }`}
@@ -728,9 +811,9 @@ export default function App() {
               </button>
               <button
                 onClick={() => handleScore(0)}
-                disabled={isLocked}
+                disabled={isLocked || viewingIndex !== 0}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
-                  isLocked 
+                  (isLocked || viewingIndex !== 0)
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                     : 'bg-slate-400 text-white hover:bg-slate-500'
                 }`}
@@ -740,9 +823,9 @@ export default function App() {
               </button>
               <button
                 onClick={() => handleScore(-1)}
-                disabled={isLocked}
+                disabled={isLocked || viewingIndex !== 0}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
-                  isLocked 
+                  (isLocked || viewingIndex !== 0)
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                     : 'bg-rose-500 text-white hover:bg-rose-600'
                 }`}
@@ -754,10 +837,10 @@ export default function App() {
           ) : (
             <button
               onClick={extractItem}
-              disabled={isLocked}
+              disabled={isLocked || viewingIndex !== 0}
               id="extract-button"
               className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                isLocked 
+                (isLocked || viewingIndex !== 0)
                   ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                   : 'bg-emerald-500 text-white hover:bg-emerald-600'
               }`}
