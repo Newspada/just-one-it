@@ -13,7 +13,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.png'],
+        includeAssets: [],
         manifest: {
           name: 'Just One Game',
           short_name: 'Just One',
@@ -23,12 +23,12 @@ export default defineConfig(({mode}) => {
           display: 'standalone',
           icons: [
             {
-              src: 'icon.png',
+              src: 'https://i.ibb.co/1BvVFND/ic-launcher.png',
               sizes: '192x192',
               type: 'image/png',
             },
             {
-              src: 'icon.png',
+              src: 'https://i.ibb.co/1BvVFND/ic-launcher.png',
               sizes: '512x512',
               type: 'image/png',
             },
