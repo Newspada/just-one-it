@@ -23,12 +23,6 @@ export default defineConfig(({mode}) => {
           display: 'standalone',
           icons: [
             {
-              src: 'https://i.ibb.co/FqwngtPk/ic-launcher-foreground.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any maskable',
-            },
-            {
               src: 'https://i.ibb.co/h1hsVwfX/ic-launcher-web.png',
               sizes: '512x512',
               type: 'image/png',
