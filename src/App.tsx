@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 
@@ -280,6 +280,8 @@ export default function App() {
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const [autoHighlight, setAutoHighlight] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Initialize pool
   const initializePool = useCallback(() => {
@@ -341,7 +343,7 @@ export default function App() {
     setHistory(prev => [{ item: nextItem, score: null }, ...prev]);
     setIsLocked(true);
     setIsAwaitingScore(true);
-    setSelectedWordIndex(null);
+    setSelectedWordIndex(autoHighlight ? Math.floor(Math.random() * 5) : null);
     setIsTimerActive(true);
   };
 
@@ -438,6 +440,86 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21]">
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+            >
+              <div className="p-6 space-y-6">
+                {/* Language Settings */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Languages</h3>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        if (showIt && !showEn) return;
+                        setShowIt(!showIt);
+                      }}
+                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${showIt ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400 grayscale'}`}
+                    >
+                      <span className="text-3xl">🇮🇹</span>
+                      <span className="font-bold">Italiano</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (showEn && !showIt) return;
+                        setShowEn(!showEn);
+                      }}
+                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${showEn ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400 grayscale'}`}
+                    >
+                      <span className="text-3xl">🇬🇧</span>
+                      <span className="font-bold">English</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Gameplay Settings */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Gameplay</h3>
+                  <button 
+                    onClick={() => setAutoHighlight(!autoHighlight)}
+                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoHighlight ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${autoHighlight ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                        <Sparkles size={18} />
+                      </div>
+                      <span className="font-bold">Auto-Highlight</span>
+                    </div>
+                    <div className={`w-10 h-6 rounded-full relative transition-colors ${autoHighlight ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoHighlight ? 'left-5' : 'left-1'}`} />
+                    </div>
+                  </button>
+                </div>
+
+                {/* Stats */}
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <Layers size={16} />
+                      <span className="text-sm font-bold">Total Revealed Cards</span>
+                    </div>
+                    <span className="text-sm font-black text-slate-800">{revealedCount} / {STATIC_ITEMS.length}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Summary Modal */}
       <AnimatePresence>
         {showSummary && (
@@ -522,31 +604,15 @@ export default function App() {
             <p className="text-[10px] font-bold opacity-80 mt-1">Remaining: {Math.max(0, 13 - history.length)}</p>
           </div>
 
-          {/* Right: Language Toggle and Counter */}
+          {/* Right: Settings and Counter */}
           <div className="flex flex-col items-end z-10">
-            <div className="flex bg-white/10 p-1 rounded-xl mb-1">
-              <button 
-                onClick={() => {
-                  if (showIt && !showEn) return;
-                  setShowIt(!showIt);
-                }}
-                className={`px-3 py-1 rounded-lg text-lg transition-all ${showIt ? 'bg-white shadow-sm' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
-                title="Italiano"
-              >
-                🇮🇹
-              </button>
-              <button 
-                onClick={() => {
-                  if (showEn && !showIt) return;
-                  setShowEn(!showEn);
-                }}
-                className={`px-3 py-1 rounded-lg text-lg transition-all ${showEn ? 'bg-white shadow-sm' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`}
-                title="English"
-              >
-                🇬🇧
-              </button>
-            </div>
-            <p className="text-[10px] font-bold opacity-80">Revealed: {revealedCount} / {STATIC_ITEMS.length}</p>
+            <button 
+              onClick={() => setShowSettings(true)}
+              className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all"
+              title="Settings"
+            >
+              <Settings size={20} />
+            </button>
           </div>
         </div>
 
