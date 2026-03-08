@@ -3,10 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, FastForward } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, FastForward, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
+
+// Sound Effects
+const SOUNDS = {
+  DRAW: 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3',
+  CORRECT: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',
+  SKIPPED: 'https://assets.mixkit.co/active_storage/sfx/2575/2575-preview.mp3',
+  WRONG: 'https://assets.mixkit.co/active_storage/sfx/2876/2876-preview.mp3',
+  SWIPE: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
+  WIN_PERFECT: 'https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3',
+  WIN_HIGH: 'https://assets.mixkit.co/active_storage/sfx/2011/2011-preview.mp3',
+  WIN_MID: 'https://assets.mixkit.co/active_storage/sfx/2010/2010-preview.mp3',
+  WIN_LOW: 'https://assets.mixkit.co/active_storage/sfx/2043/2043-preview.mp3',
+};
 
 // Types
 interface Item {
@@ -276,14 +289,52 @@ export default function App() {
   const [isAwaitingScore, setIsAwaitingScore] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState({ total: 0, correct: 0, skipped: 0, errors: 0 });
-  const [showEn, setShowEn] = useState(false);
-  const [showIt, setShowIt] = useState(true);
+  const [showEn, setShowEn] = useState<boolean>(() => {
+    const saved = localStorage.getItem('showEn');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  const [showIt, setShowIt] = useState<boolean>(() => {
+    const saved = localStorage.getItem('showIt');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
   const [isTimerActive, setIsTimerActive] = useState(false);
-  const [autoHighlight, setAutoHighlight] = useState(true);
+  const [autoHighlight, setAutoHighlight] = useState<boolean>(() => {
+    const saved = localStorage.getItem('autoHighlight');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [autoLock, setAutoLock] = useState<boolean>(() => {
+    const saved = localStorage.getItem('autoLock');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [showSettings, setShowSettings] = useState(false);
   const [viewingIndex, setViewingIndex] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('soundEnabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [volume, setVolume] = useState<number>(() => {
+    const saved = localStorage.getItem('volume');
+    return saved !== null ? JSON.parse(saved) : 0.5;
+  });
+
+  // Persist settings
+  useEffect(() => {
+    localStorage.setItem('showEn', JSON.stringify(showEn));
+    localStorage.setItem('showIt', JSON.stringify(showIt));
+    localStorage.setItem('autoHighlight', JSON.stringify(autoHighlight));
+    localStorage.setItem('autoLock', JSON.stringify(autoLock));
+    localStorage.setItem('soundEnabled', JSON.stringify(soundEnabled));
+    localStorage.setItem('volume', JSON.stringify(volume));
+  }, [showEn, showIt, autoHighlight, autoLock, soundEnabled, volume]);
+
+  const playSound = useCallback((url: string) => {
+    if (!soundEnabled) return;
+    const audio = new Audio(url);
+    audio.volume = volume;
+    audio.play().catch(e => console.log('Audio play blocked:', e));
+  }, [soundEnabled, volume]);
 
   // Initialize pool
   const initializePool = useCallback(() => {
@@ -349,17 +400,23 @@ export default function App() {
     setCurrentItem(nextItem);
     setHistory(prev => [newItem, ...prev]);
     setViewingIndex(0);
-    setIsLocked(true);
+    if (autoLock) {
+      setIsLocked(true);
+    }
     setIsAwaitingScore(true);
     setSelectedWordIndex(newItem.selectedWordIndex);
     setIsTimerActive(true);
+    playSound(SOUNDS.DRAW);
   };
 
   const handleScore = (score: number) => {
     let actualScore = score;
     let isPenalty = false;
 
-    if (score === -1) {
+    if (score === 1) playSound(SOUNDS.CORRECT);
+    else if (score === 0) playSound(SOUNDS.SKIPPED);
+    else if (score === -1) {
+      playSound(SOUNDS.WRONG);
       actualScore = 0;
       isPenalty = true;
     }
@@ -394,6 +451,11 @@ export default function App() {
           const isPerfect = nextTotal === 13;
           const isHigh = nextTotal >= 11;
           const isMid = nextTotal >= 7;
+
+          if (isPerfect) playSound(SOUNDS.WIN_PERFECT);
+          else if (isHigh) playSound(SOUNDS.WIN_HIGH);
+          else if (isMid) playSound(SOUNDS.WIN_MID);
+          else playSound(SOUNDS.WIN_LOW);
           
           const duration = isPerfect ? 7 * 1000 : isHigh ? 5 * 1000 : isMid ? 3 * 1000 : 1.5 * 1000;
           const multiplier = isPerfect ? 150 : isHigh ? 100 : isMid ? 50 : 20;
@@ -443,9 +505,11 @@ export default function App() {
     if (info.offset.x > swipeThreshold && viewingIndex < history.length - 1) {
       // Swipe Right -> Go to older cards
       setViewingIndex(prev => prev + 1);
+      playSound(SOUNDS.SWIPE);
     } else if (info.offset.x < -swipeThreshold && viewingIndex > 0) {
       // Swipe Left -> Go to newer cards
       setViewingIndex(prev => prev - 1);
+      playSound(SOUNDS.SWIPE);
     }
   };
 
@@ -517,20 +581,68 @@ export default function App() {
                 {/* Gameplay Settings */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Gameplay</h3>
-                  <button 
-                    onClick={() => setAutoHighlight(!autoHighlight)}
-                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoHighlight ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${autoHighlight ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                        <Sparkles size={18} />
+                  <div className="space-y-2">
+                    <button 
+                      onClick={() => setAutoHighlight(!autoHighlight)}
+                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoHighlight ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${autoHighlight ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                          <Sparkles size={18} />
+                        </div>
+                        <span className="font-bold">Auto-Highlight</span>
                       </div>
-                      <span className="font-bold">Auto-Highlight</span>
+                      <div className={`w-10 h-6 rounded-full relative transition-colors ${autoHighlight ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoHighlight ? 'left-5' : 'left-1'}`} />
+                      </div>
+                    </button>
+
+                    <button 
+                      onClick={() => setAutoLock(!autoLock)}
+                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoLock ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${autoLock ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                          <Lock size={18} />
+                        </div>
+                        <span className="font-bold">Auto-Lock</span>
+                      </div>
+                      <div className={`w-10 h-6 rounded-full relative transition-colors ${autoLock ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoLock ? 'left-5' : 'left-1'}`} />
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sound Settings */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Audio</h3>
+                  <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 flex items-center gap-4">
+                    <button 
+                      onClick={() => setSoundEnabled(!soundEnabled)}
+                      className={`p-3 rounded-xl transition-all active:scale-90 ${soundEnabled ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-200 text-slate-500'}`}
+                      title={soundEnabled ? "Mute" : "Unmute"}
+                    >
+                      {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                    </button>
+                    <div className="flex-1 flex items-center gap-3">
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="1" 
+                        step="0.01" 
+                        value={volume}
+                        onChange={(e) => setVolume(parseFloat(e.target.value))}
+                        className="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                        style={{
+                          background: `linear-gradient(to right, #10b981 0%, #10b981 ${volume * 100}%, #e2e8f0 ${volume * 100}%, #e2e8f0 100%)`
+                        }}
+                      />
+                      <span className="text-xs font-bold text-slate-500 min-w-[32px] text-right">
+                        {Math.round(volume * 100)}%
+                      </span>
                     </div>
-                    <div className={`w-10 h-6 rounded-full relative transition-colors ${autoHighlight ? 'bg-emerald-500' : 'bg-slate-300'}`}>
-                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoHighlight ? 'left-5' : 'left-1'}`} />
-                    </div>
-                  </button>
+                  </div>
                 </div>
 
                 {/* Stats */}
