@@ -29,7 +29,7 @@ export default defineConfig(({mode}) => {
               purpose: 'any maskable',
             },
             {
-              src: 'https://i.ibb.co/FqwngtPk/ic-launcher-foreground.png',
+              src: 'https://i.ibb.co/h1hsVwfX/ic-launcher-web.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any maskable',
