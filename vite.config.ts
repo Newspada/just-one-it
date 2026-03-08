@@ -23,10 +23,28 @@ export default defineConfig(({mode}) => {
           display: 'standalone',
           icons: [
             {
-              src: 'https://i.ibb.co/h1hsVwfX/ic-launcher-web.png',
-              sizes: '512x512',
+              src: 'https://i.ibb.co/fYnQRN81/ic-launcher-foreground.png',
+              sizes: '192x192',
               type: 'image/png',
-              purpose: 'any maskable',
+              purpose: 'any',
+            },
+            {
+              src: 'https://i.ibb.co/fYnQRN81/ic-launcher-foreground.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+            {
+              src: 'https://i.ibb.co/FqwngtPk/ic-launcher-foreground.png',
+              sizes: '432x432',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: 'https://i.ibb.co/FqwngtPk/ic-launcher-foreground.png',
+              sizes: '432x432',
+              type: 'image/png',
+              purpose: 'maskable',
             },
           ],
         },
