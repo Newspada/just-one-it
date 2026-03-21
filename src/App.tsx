@@ -1030,7 +1030,7 @@ export default function App() {
         </div>
 
         {/* Controls */}
-        <div className="pt-4 px-8 pb-8 bg-slate-50 border-t border-slate-200 flex flex-col gap-4">
+        <div className="pt-4 px-8 pb-14 bg-slate-50 border-t border-slate-200 flex flex-col gap-4">
           <div className="flex items-center justify-center gap-8">
             <button
               onClick={() => setIsBlurred(!isBlurred)}
