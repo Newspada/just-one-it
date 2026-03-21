@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth unique ID" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "email": { "type": "string", "format": "email", "description": "User's email address" },
+        "photoURL": { "type": "string", "format": "uri", "description": "User's photo URL" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the profile was created" },
+        "lastLogin": { "type": "string", "format": "date-time", "description": "When the user last logged in" }
+      },
+      "required": ["uid", "email"]
+    },
+    "GameSession": {
+      "title": "GameSession",
+      "description": "Information about a completed game session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "UID of the user who played" },
+        "score": { "type": "integer", "description": "Total score achieved" },
+        "correct": { "type": "integer", "description": "Number of correct answers" },
+        "skipped": { "type": "integer", "description": "Number of skipped items" },
+        "errors": { "type": "integer", "description": "Number of errors" },
+        "duration": { "type": "integer", "description": "Duration of the game in seconds" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the game was completed" }
+      },
+      "required": ["userId", "score", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/gameSessions/{sessionId}": {
+      "schema": "GameSession",
+      "description": "Game session history"
+    }
+  }
+}
