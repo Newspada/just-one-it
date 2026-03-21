@@ -883,7 +883,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Android-style Status Bar Area (Visual only) */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90%] max-h-[850px] relative">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[95%] max-h-[850px] relative">
         
         {/* Header */}
         <div className={`${timeLeft <= 0 ? 'bg-rose-600' : 'bg-emerald-600'} p-4 text-white flex justify-between items-center shadow-md relative h-20 transition-colors duration-500`}>
