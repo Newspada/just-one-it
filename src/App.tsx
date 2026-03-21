@@ -411,7 +411,7 @@ export default function App() {
     : { bg: 'bg-rose-600', text: 'text-rose-600', btn: 'bg-rose-500', hover: 'hover:bg-rose-600' };
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21]">
+    <div className="h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21] overflow-hidden fixed inset-0">
       {!isFirebaseConfigured && (
         <div className="fixed top-0 left-0 right-0 bg-amber-500 text-white text-center py-2 px-4 z-[100] font-bold text-sm flex items-center justify-center gap-2">
           <Settings size={16} className="animate-spin" />
