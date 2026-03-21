@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, FastForward, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3 } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured } from './firebase';
@@ -15,11 +15,11 @@ import { STATIC_ITEMS_IT } from './data/words_it';
 
 // Sound Effects
 const SOUNDS = {
-  DRAW: 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3',
+  DRAW: 'https://assets.mixkit.co/active_storage/sfx/600/600-preview.mp3',
   CORRECT: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',
   SKIPPED: 'https://assets.mixkit.co/active_storage/sfx/2575/2575-preview.mp3',
   WRONG: 'https://assets.mixkit.co/active_storage/sfx/2876/2876-preview.mp3',
-  SWIPE: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
+  SWIPE: 'https://assets.mixkit.co/active_storage/sfx/1491/1491-preview.mp3',
   WIN_PERFECT: 'https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3',
   WIN_HIGH: 'https://assets.mixkit.co/active_storage/sfx/2011/2011-preview.mp3',
   WIN_MID: 'https://assets.mixkit.co/active_storage/sfx/2010/2010-preview.mp3',
@@ -1011,7 +1011,7 @@ export default function App() {
                     }`}
                     title="Back to Current"
                   >
-                    <FastForward size={24} />
+                    <ChevronsRight size={24} />
                   </button>
                 )}
               </motion.div>
@@ -1151,7 +1151,7 @@ export default function App() {
               
               if (histItem.score === 1) dotColor = 'bg-emerald-500';
               else if (histItem.score === -1) dotColor = 'bg-rose-500';
-              else if (histItem.item === null) dotColor = 'bg-slate-400';
+              else if (histItem.item === null) dotColor = 'bg-black';
               else if (histItem.score === 0) dotColor = 'bg-slate-400';
               else dotColor = 'bg-emerald-200'; // Waiting for score
             }
