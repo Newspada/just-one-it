@@ -7,9 +7,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, FastForward, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError } from './firebase';
+import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, where, Timestamp } from 'firebase/firestore';
+import { STATIC_ITEMS } from './data/words_en';
+import { STATIC_ITEMS_IT } from './data/words_it';
 
 // Sound Effects
 const SOUNDS = {
@@ -39,232 +41,6 @@ interface HistoryItem {
 }
 
 // Static list of 110 items provided by the user
-const STATIC_ITEMS: string[][] = [
-  ["BRANCH", "CINDERELLA", "CREPE", "ISLAND", "TAXI"],
-  ["SAIL", "PARMESAN", "SHREK", "POLE", "WESTERN"],
-  ["SOCCER", "ALARM", "DANCE", "HULK", "DESERT"],
-  ["GOAL", "BREAD", "DEVIL", "PRIMARY", "TARZAN"],
-  ["SCREW", "RAKE", "COMPUTER", "PARIS", "BALL"],
-  ["SERIES", "NEST", "SPICE", "ELEPHANT", "CARNIVAL"],
-  ["VENGEANCE", "BOSS", "EMERGENCY", "CROSS", "WALTZ"],
-  ["MAFIA", "LARGE", "MISSILE", "MICROSOFT", "SKI"],
-  ["GENIUS", "DRACULA", "LION", "SOCK", "FRIDAY"],
-  ["COCKTAIL", "MARIO", "CORK", "VIOLIN", "PEACH"],
-  ["RAT", "PLIER", "AMAZON", "TOBACCO", "RULER"],
-  ["EPIPHANY", "ELASTIC", "PAN", "FLASH", "TUNNEL"],
-  ["FOX", "POLICE", "SIMPSON", "LIGHTNING", "NEWSPAPER"],
-  ["MOUNTAIN", "PEANUT", "LIGHTBULB", "JEDI", "PIMENTO"],
-  ["SOMBRERO", "CLOVER", "BUTTON", "CHEESE", "CHEWBECCA"],
-  ["GOKU", "DOCTOR", "STRAWBERRY", "NUCLEAR", "LOTTERY"],
-  ["CEMETERY", "CUPID", "UMBRELLA", "LEAP", "ROOT"],
-  ["TREASURE", "PILOT", "MICKEY", "SEWER", "GALAXY"],
-  ["FABLE", "FACEBOOK", "ACORN", "BONE", "BRIDGE"],
-  ["CRANE", "OPERATION", "RAP", "MUSE", "DEFENSE"],
-  ["LIGHT", "SOFA", "MOZART", "RING", "PIZZA"],
-  ["KNIGHT", "PEACE", "FLOWER", "SWITZERLAND", "CALENDAR"],
-  ["SYRUP", "FOREST", "SCALE", "ZEUS", "COCKROACH"],
-  ["PIRATE", "VACATION", "ELF", "MAGNET", "FORK"],
-  ["JONES", "VOLCANO", "PASSION", "ROOSTER", "ELECTRICITY"],
-  ["BAKER", "PERFUME", "FLAME", "ZOMBIE", "JOKER"],
-  ["POISON", "STAR", "WOLF", "GARIBALDI", "ANNIVERSARY"],
-  ["HAMMER", "CHILE", "BOLOGNA", "EMPEROR", "POPE"],
-  ["HOLLYWOOD", "MOSQUITO", "SPEAR", "PURSE", "END"],
-  ["BOARD", "FIREMAN", "GLASS", "SUSHI", "GREECE"],
-  ["SLIPPER", "LEAF", "COUGAR", "REVOLUTION", "SAHARA"],
-  ["GROTTO", "FORD", "CASINO", "CANDY", "FOUNTAIN"],
-  ["FLINTSTONE", "ROBOT", "COMEDY", "LANGUAGE", "HAIRDRESSER"],
-  ["DINOSAUR", "YELLOW", "MUSHROOM", "PIGEON", "PIKACHU"],
-  ["THUNDER", "GARDEN", "PAINTING", "SKYSCRAPER", "TRUCE"],
-  ["MUMMY", "BATTERY", "FAIR", "KARATE", "PARROT"],
-  ["OLYMPICS", "CLIMB", "LAWYER", "TOLKIEN", "RIVER"],
-  ["CARPET", "PONY", "CROWN", "NEW", "TARANTINO"],
-  ["BARBIE", "CHOCOLATE", "SNOW", "TIE", "WIND"],
-  ["THOUGHT", "FRANKENSTEIN", "SHELF", "ACCENT", "SHOWER"],
-  ["STEW", "CANADA", "ZOO", "PIPE", "BOOK"],
-  ["TOWEL", "VENUS", "OCTOPUS", "CYCLE", "OPERA"],
-  ["LADYBUG", "MUSTARD", "SHERLOCK", "BOTTLE", "VIRUS"],
-  ["MUSIC", "THROAT", "AMERICA", "COFFEE", "FEVER"],
-  ["GOOGLE", "BOW", "MARS", "GOLF", "TICKET"],
-  ["REGISTER", "PLAYSTATION", "BLOND", "IRIS", "LIMB"],
-  ["OPRAH", "NINJA", "COMFORTER", "HUNTER", "VEGETABLE"],
-  ["OVEN", "SOCKET", "EASTER", "HOSE", "RAIL"],
-  ["BUTTERFLY", "POWDER", "PORCELAIN", "MARKET", "COCOON"],
-  ["BARBECUE", "PANDA", "DREAM", "MARRIAGE", "BELLYBUTTON"],
-  ["CAVITY", "SLEEVE", "BOTTOM", "POKER", "PIE"],
-  ["SUGAR", "THEATER", "SHOVEL", "DUNE", "VOLUME"],
-  ["CAT", "PALACE", "ELECTION", "HONEY", "RAMBO"],
-  ["FLORA", "BEEF", "LAKE", "MONKEY", "LIGHTHOUSE"],
-  ["NEIGHBORHOOD", "ROCK", "TIGER", "NEEDLE", "SOAP"],
-  ["PRISON", "HOLE", "PUNK", "EVENING", "MAP"],
-  ["NUMBER", "DECATHLON", "RUM", "METAL", "TUNA"],
-  ["KING", "BALLET", "BAND", "ALCOHOL", "LAVA"],
-  ["CANVAS", "VAMPIRE", "MONOPOLY", "CARTOON", "HOTEL"],
-  ["DARWIN", "TOMATO", "PARACHUTE", "CANNON", "BINOCULARS"],
-  ["MIRAGE", "RAMSES", "BONFIRE", "CROSSROADS", "PRINCESS"],
-  ["GUILLOTINE", "MAGICIAN", "DRINK", "BANANA", "FITZGERALD"],
-  ["CAESAR", "NOODLE", "HAT", "DENTIST", "WHEAT"],
-  ["SHELL", "SHAKESPEARE", "GIANT", "FOAM", "CAVE"],
-  ["KNIFE", "PILLOW", "ARMSTRONG", "SWORD", "FLIGHT"],
-  ["EXPLOSION", "PENGUIN", "CELL", "GANDHI", "OASIS"],
-  ["CROCODILE", "JEWELRY", "SUBWAY", "GLASSES", "STING"],
-  ["JACKSON", "CIGARETTE", "BRACELET", "WEATHER", "TOWER"],
-  ["TATTOO", "GERMANY", "APPLE", "SIREN", "BOXING"],
-  ["HEART", "MOSCOW", "POOL", "UNICORN", "ORANGE"],
-  ["MELON", "ANCHOR", "ISRAEL", "CACTUS", "TENNIS"],
-  ["PEPPER", "TRIANGLE", "DOLL", "ITALY", "SCENE"],
-  ["POLAR", "MOUSE", "NECKLACE", "FARM", "BELGIUM"],
-  ["FRANCE", "MOON", "CAFETERIA", "HANDLE", "TOOL"],
-  ["STRING", "AUSTRALIA", "CASTLE", "GUARD", "SHEEP"],
-  ["PUPPET", "GAME", "ROME", "SAFE", "PLANE"],
-  ["BRAIN", "MASK", "CONCERT", "SPAIN", "SHARK"],
-  ["LONELY", "POTATO", "WAVE", "SCHOOL", "LEGO"],
-  ["TOKYO", "HEEL", "CHICKEN", "HELICOPTER", "GENERAL"],
-  ["TRADITION", "SNAKE", "CUP", "PICASSO", "WATCH"],
-  ["CAKE", "HORSE", "EUROPE", "WHITE", "BALD"],
-  ["GREEN", "HUMOR", "CORNER", "ANTARCTICA", "SAUSAGE"],
-  ["PLASTIC", "RAY", "CARTON", "PEBBLE", "EVEREST"],
-  ["TAIL", "LETTER", "BED", "PARADISE", "EGG"],
-  ["NINTENDO", "BET", "SALT", "MANUAL", "FROST"],
-  ["HOUSE", "GODFATHER", "WAR", "ROPE", "WINE"],
-  ["CLUB", "CHRISTMAS", "FASHION", "STATION", "LAMP"],
-  ["RADIO", "PEAR", "GLADIATOR", "SUN", "CEREAL"],
-  ["BERRY", "STUDY", "FEAR", "TITANIC", "MACHINE"],
-  ["DWARF", "CIRCUS", "BISHOP", "MOWER", "STONE"],
-  ["TRAIN", "SHRIMP", "ROOM", "CLEOPATRA", "WINDOW"],
-  ["TANGO", "RIPE", "TEMPLE", "SAND", "FRIES"],
-  ["GRENADE", "STUFFING", "BRUSH", "PIG", "HUMAN"],
-  ["ALCATRAZ", "SMOKE", "HAZELNUT", "DIAMOND", "ROSE"],
-  ["TRUMPET", "UNIFORM", "RAIN", "FIRE", "HELMET"],
-  ["SHIP", "BOWLING", "CHURCH", "NET", "SPY"],
-  ["HALLOWEEN", "AZZURRO", "BABY", "CANTEEN", "PAIR"],
-  ["SEA", "HISTORY", "BEER", "DISCO", "PRESIDENT"],
-  ["MIRROR", "PROM", "BATH", "PIT", "FAIRY"],
-  ["LADDER", "ANGEL", "KEY", "HAIR", "MATRIX"],
-  ["MUSTACHE", "BUBBLE", "CHAIN", "ELVIS", "COOKIE"],
-  ["AVATAR", "MILL", "JUNGLE", "NUN", "FIRECRACKER"],
-  ["IRON", "BATMAN", "SONG", "NILE", "CINEMA"],
-  ["FERRARI", "ALADDIN", "TUBE", "BELT", "BAR"],
-  ["MOUTH", "CAROUSEL", "DAISY", "GRASS", "FALL"],
-  ["MONEY", "GARLIC", "CUBE", "VIOLET", "MILK"],
-  ["ICE", "FLUTE", "CHAMPAGNE", "SAFARI", "ALIEN"],
-  ["CANE", "MUSKETEER", "THREAD", "TULIP", "IKEA"],
-  ["BREAKFAST", "GHOST", "STRAW", "NAIL", "POTTER"],
-  ["SPARTACUS", "FUR", "TORNADO", "PYRAMID", "ALLIANCE"]
-];
-
-const STATIC_ITEMS_IT: string[][] = [
-  ["RAMO", "CENERENTOLA", "CREPE", "ISOLA", "TAXI"],
-  ["VELA", "PARMIGIANO", "SHREK", "PALO", "AZIONE"],
-  ["CALCIO", "ALLARME", "DANZA", "HULK", "DESERTO"],
-  ["OBIETTIVO", "PANE", "DIAVOLO", "PRIMARIA", "TARZAN"],
-  ["VITE", "RASTRELLO", "COMPUTER", "PARIGI", "PALLA"],
-  ["SERIE", "NIDO", "SPEZIE", "ELEFANTE", "CARNEVALE"],
-  ["VENDETTA", "CAPO", "EMERGENZA", "CROCE", "VALZER"],
-  ["MAFIA", "GROSSO", "MISSILE", "MICROSOFT", "SCI"],
-  ["GENIO", "DRACULA", "LEONE", "CALZINO", "VENERDÌ"],
-  ["COCKTAIL", "MARIO", "TAPPO", "VIOLINO", "PESCA"],
-  ["TOPO", "PINZA", "AMAZZONIA", "TABACCO", "RIGHELLO"],
-  ["EPIFANIA", "ELASTICO", "PADELLA", "FLASH", "TUNNEL"],
-  ["VOLPE", "POLIZIA", "SIMPSON", "FULMINE", "GIORNALE"],
-  ["MONTAGNA", "ARACHIDI", "LAMPADINA", "JEDI", "PEPERONE"],
-  ["SOMBRERO", "TRIFOGLIO", "BOTTONE", "FORMAGGIO", "PELUCHE"],
-  ["GOKU", "DOTTORE", "FRAGOLA", "NUCLEARE", "LOTTERIA"],
-  ["CIMITERO", "CUPIDO", "OMBRELLO", "SALTO", "RADICE"],
-  ["TESORO", "PILOTA", "TOPOLINO", "FOGNA", "GALASSIA"],
-  ["FIABA", "FACEBOOK", "GHIANDA", "OSSO", "PONTE"],
-  ["GRU", "OPERAZIONE", "RAP", "MUSA", "DIFESA"],
-  ["LUCE", "DIVANO", "MOZART", "ANELLO", "PIZZA"],
-  ["CAVALIERE", "PACE", "FIORE", "SVIZZERA", "CALENDARIO"],
-  ["SCIROPPO", "FORESTA", "BILANCIA", "ZEUS", "VESPA"],
-  ["PIRATA", "VACANZA", "ELFO", "CALAMITA", "FORCHETTA"],
-  ["BENIGNI", "VULCANO", "PASSIONE", "GALLO", "ELETTRICITÀ"],
-  ["FORNAIO", "PROFUMO", "FIAMMA", "ZOMBIE", "JOKER"],
-  ["VELENO", "STELLA", "LUPO", "GARIBALDI", "COMPLEANNO"],
-  ["MARTELLO", "PEPERONCINO", "BOLOGNA", "IMPERATORE", "PAPA"],
-  ["HOLLYWOOD", "ZANZARA", "LANCIA", "BORSA", "FINE"],
-  ["TAVOLO", "POMPIERE", "BICCHIERE", "SUSHI", "GRECIA"],
-  ["SCARPA", "FOGLIA", "GIAGUARO", "RIVOLUZIONE", "SAHARA"],
-  ["GROTTA", "FIAT", "CASINÒ", "CARAMELLA", "FONTANA"],
-  ["FLINTSTONE", "ROBOT", "COMMEDIA", "LINGUA", "PARRUCCHIERE"],
-  ["DINOSAURO", "GIALLO", "FUNGO", "PICCIONE", "PIKACHU"],
-  ["TUONO", "GIARDINO", "DIPINTO", "GRATTACIELO", "TREGUA"],
-  ["MUMMIA", "BATTERIA", "FIERA", "KARATE", "PAPPAGALLO"],
-  ["OLIMPIADI", "ARRAMPICATA", "AVVOCATO", "DANTE", "FIUME"],
-  ["TAPPETO", "PONY", "CORONA", "NUOVO", "TARANTINO"],
-  ["BARBIE", "CIOCCOLATO", "NEVE", "CRAVATTA", "VENTO"],
-  ["PENSIERO", "FRANKENSTEIN", "MENSOLA", "ACCESSORIO", "DOCCIA"],
-  ["PROCESSO", "CANADA", "ZOO", "TUBO", "LIBRO"],
-  ["PEDONE", "VENERE", "POLPO", "BICICLETTA", "OPERA"],
-  ["COCCINELLA", "SENAPE", "SHERLOCK", "BOTTIGLIA", "VIRUS"],
-  ["MUSICA", "GOLA", "AMERICA", "CAFFÈ", "FEBBRE"],
-  ["GOOGLE", "FIOCCO", "MARTE", "GOLF", "BIGLIETTO"],
-  ["REGISTRATORE", "PLAYSTATION", "BIONDA", "CRESTA", "ARTO"],
-  ["SANREMO", "NINJA", "TRAPUNTA", "CACCIATORE", "VERDURA"],
-  ["FORNO", "SPINA", "PASQUA", "TUBO", "FERROVIA"],
-  ["FARFALLA", "POLVERE", "PORCELLANA", "MERCATO", "PIANO"],
-  ["BARBECUE", "PANDA", "SOGNO", "MATRIMONIO", "OMBELICO"],
-  ["DENTE", "MANICA", "FONDO", "POKER", "TORTA"],
-  ["ZUCCHERO", "TEATRO", "PALA", "DUNA", "VOLUME"],
-  ["GATTO", "PALAZZO", "ELEZIONI", "MIELE", "MATTEO"],
-  ["FLORA", "MUCCA", "LAGO", "SCIMMIA", "FARO"],
-  ["QUARTIERE", "ROCK", "TIGRE", "AGO", "SAPONE"],
-  ["PRIGIONE", "BUCO", "MARANZA", "SERA", "MAPPA"],
-  ["NUMERO", "DECATHLON", "LIQUORE", "METALLO", "TONNO"],
-  ["RE", "BALLETTO", "BANDA", "ALCOL", "LAVA"],
-  ["TELA", "VAMPIRO", "MONOPOLI", "FUMETTO", "HOTEL"],
-  ["DARWIN", "POMODORO", "PARACADUTE", "CANNONE", "BINOCOLO"],
-  ["MIRAGGIO", "EGITTO", "FALÒ", "INCROCIO", "PRINCIPESSA"],
-  ["GHIGLIOTTINA", "MAGO", "BIBITA", "BANANA", "MARCO"],
-  ["CESARE", "SPAGHETTI", "CAPPELLO", "DENTISTA", "GRANO"],
-  ["CONCHIGLIA", "SHAKESPEARE", "GIGANTE", "SCHIUMA", "GROTTA"],
-  ["COLTELLO", "CUSCINO", "MANGO", "SPADA", "VOLO"],
-  ["ESPLOSIONE", "PINGUINO", "TELEFONO", "GANDHI", "COLLO"],
-  ["COCCODRILLO", "GIOIELLO", "METRO", "OCCHIALI", "LUCA"],
-  ["MINA", "SIGARETTA", "BRACCIALETTO", "TEMPO", "TORRE"],
-  ["TATUAGGIO", "GERMANIA", "MELA", "SIRENA", "BOXE"],
-  ["CUORE", "MOSCA", "PISCINA", "UNICORNO", "ARANCIO"],
-  ["MELONE", "ANCORA", "ISRAELE", "CACTUS", "TENNIS"],
-  ["PEPE", "TRIANGOLO", "BAMBOLA", "ITALIA", "SCENA"],
-  ["POLO", "TOPO", "COLLANA", "FATTORIA", "BELGIO"],
-  ["FRANCIA", "LUNA", "CUCCHIAIO", "MANICO", "ATTREZZO"],
-  ["CORDA", "AUSTRALIA", "CASTELLO", "GUARDIA", "PECORA"],
-  ["MARIONETTA", "GIOCO", "ROMA", "CASSA", "AEREO"],
-  ["CERVELLO", "MASCHERA", "CONCERTO", "SPAGNA", "SQUALO"],
-  ["SOLO", "PATATA", "ONDA", "SCUOLA", "LEGO"],
-  ["TOKYO", "TACCO", "POLLO", "ELICOTTERO", "GENERALE"],
-  ["TRADIZIONE", "SERPENTE", "TAZZA", "PICASSO", "OROLOGIO"],
-  ["TORTA", "CAVALLO", "EUROPA", "BIANCO", "CALVO"],
-  ["VERDE", "ASSO", "ANGOLO", "ANTARTIDE", "SALSICCIA"],
-  ["PLASTICA", "RAGGIO", "CARTONE", "SASSO", "EVEREST"],
-  ["CODA", "LETTERA", "LETTO", "PARADISO", "UOVO"],
-  ["NINTENDO", "SCOMMESSA", "SALE", "MANUALE", "FREDDO"],
-  ["CASA", "PADRINO", "GUERRA", "CORDA", "VINO"],
-  ["CLUB", "NATALE", "MODA", "STAZIONE", "LAMPADA"],
-  ["RADIO", "PERA", "GLADIATORE", "SOLE", "CEREALI"],
-  ["BACCA", "STUDIO", "PAURA", "TITANIC", "MACCHINA"],
-  ["NANO", "CIRCO", "PRETE", "TAGLIAERBA", "PIETRA"],
-  ["TRENO", "GAMBERO", "STANZA", "CLEOPATRA", "FINESTRA"],
-  ["TANGO", "MATURO", "TEMPIO", "SABBIA", "PATATINE"],
-  ["GRANATA", "PIENO", "SPAZZOLA", "MAIALE", "UOMO"],
-  ["ALCATRAZ", "FUMO", "NOCCIOLA", "DIAMANTE", "ROSA"],
-  ["TROMBA", "UNIFORME", "PIOGGIA", "FUOCO", "CASCO"],
-  ["NAVE", "BOWLING", "CHIESA", "RETE", "SPIA"],
-  ["HALLOWEEN", "AZZURRO", "BAMBINO", "BORRACCIA", "COPPIA"],
-  ["MARE", "STORIA", "BIRRA", "DISCOTECA", "PRESIDENTE"],
-  ["SPECCHIO", "CAPODANNO", "BAGNO", "FOSSO", "FATA"],
-  ["SCALA", "ANGELO", "CHIAVE", "CAPELLI", "NEO"],
-  ["BAFFI", "BOLLA", "CATENA", "ALBANO", "BISCOTTO"],
-  ["AVATAR", "MULINO", "GIUNGLA", "SUORA", "PETARDO"],
-  ["FERRO", "BATMAN", "CANZONE", "NILO", "CINEMA"],
-  ["FERRARI", "ALADDIN", "TUBO", "CINTURA", "BAR"],
-  ["BOCCA", "GIOSTRA", "MARGHERITA", "ERBA", "CADUTA"],
-  ["DENARO", "AGLIO", "DADO", "VIOLA", "LATTE"],
-  ["GHIACCIO", "FLAUTO", "CHAMPAGNE", "SAFARI", "ALIENO"],
-  ["BASTONE", "MOSCHETTIERE", "FILO", "TULIPANO", "IKEA"],
-  ["COLAZIONE", "FANTASMA", "NODO", "CHIODO", "CAMPANA"],
-  ["ALESSANDRO", "PELLICCIA", "TORNADO", "PIRAMIDE", "ALLEANZA"]
-];
-
 // Helper to generate 110 items from the static list and shuffle them
 const generateItems = (): Item[] => {
   const itemsWithOriginalIndex = STATIC_ITEMS.map((words, index) => ({
@@ -349,10 +125,16 @@ export default function App() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [selectedSession, setSelectedSession] = useState<any | null>(null);
+  const [showSessionDetail, setShowSessionDetail] = useState(false);
   const hasSavedSession = useRef(false);
 
   // Auth listener
   useEffect(() => {
+    if (!isFirebaseConfigured) {
+      setAuthLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setAuthLoading(false);
@@ -383,6 +165,7 @@ export default function App() {
         skipped: summaryData.skipped,
         errors: summaryData.errors,
         duration: duration,
+        history: history, // Save the full history of cards
         timestamp: serverTimestamp()
       }).catch(error => {
         hasSavedSession.current = false;
@@ -634,6 +417,105 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21]">
+      {!isFirebaseConfigured && (
+        <div className="fixed top-0 left-0 right-0 bg-amber-500 text-white text-center py-2 px-4 z-[100] font-bold text-sm flex items-center justify-center gap-2">
+          <Settings size={16} className="animate-spin" />
+          <span>Firebase not configured. Please set the required secrets in Settings.</span>
+        </div>
+      )}
+      {/* Session Detail Modal */}
+      <AnimatePresence>
+        {showSessionDetail && selectedSession && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh]"
+            >
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {selectedSession.history ? (
+                  [...selectedSession.history].reverse().filter(h => h.item).map((h: any, idx: number) => {
+                    const isCorrect = h.score === 1;
+                    const isSkipped = h.score === 0;
+                    const isMistake = h.score === -1;
+
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`p-3 rounded-2xl border flex items-center gap-3 ${
+                          isCorrect ? 'bg-emerald-50 border-emerald-100' :
+                          isSkipped ? 'bg-slate-50 border-slate-200' :
+                          'bg-rose-50 border-rose-100'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[10px] font-black text-slate-400 leading-none">#{h.item.originalIndex}</span>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white ${
+                            isCorrect ? 'bg-emerald-500' :
+                            isSkipped ? 'bg-slate-400' :
+                            'bg-rose-500'
+                          }`}>
+                            {isCorrect ? <CheckCircle2 size={18} /> :
+                             isSkipped ? <MinusCircle size={18} /> :
+                             <XCircle size={18} />}
+                          </div>
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {h.item.wordsIt.map((word: string, wIdx: number) => (
+                              <span 
+                                key={wIdx}
+                                className={`text-sm px-2 py-1 rounded-lg font-bold ${
+                                  h.selectedWordIndex === wIdx 
+                                    ? 'bg-slate-800 text-white shadow-sm' 
+                                    : 'bg-white/50 text-slate-400 border border-slate-200/50'
+                                }`}
+                              >
+                                {word}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="py-12 text-center">
+                    <History size={48} className="mx-auto text-slate-200 mb-4" />
+                    <p className="text-slate-400 font-medium">No detailed history for this game.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 bg-slate-50 border-t border-slate-100">
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="bg-white p-2 rounded-xl border border-slate-200 text-center">
+                    <span className="text-[10px] font-black text-emerald-500 uppercase block">Correct</span>
+                    <span className="text-lg font-black text-slate-700">{selectedSession.correct}</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-xl border border-slate-200 text-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase block">Skipped</span>
+                    <span className="text-lg font-black text-slate-700">{selectedSession.skipped}</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-xl border border-slate-200 text-center">
+                    <span className="text-[10px] font-black text-rose-500 uppercase block">Mistakes</span>
+                    <span className="text-lg font-black text-slate-700">{selectedSession.errors}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSessionDetail(false)}
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all active:scale-95"
+                >
+                  Back to History
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* History Modal */}
       <AnimatePresence>
         {showHistory && (
@@ -681,9 +563,13 @@ export default function App() {
                       : { bg: 'bg-rose-50 border-rose-100', text: 'text-rose-600', accent: 'bg-rose-500' };
 
                     return (
-                      <div 
+                      <button 
                         key={session.id}
-                        className={`p-3 rounded-2xl border ${theme.bg} flex items-center gap-3 shadow-sm`}
+                        onClick={() => {
+                          setSelectedSession(session);
+                          setShowSessionDetail(true);
+                        }}
+                        className={`w-full text-left p-3 rounded-2xl border ${theme.bg} flex items-center gap-3 shadow-sm hover:scale-[1.02] active:scale-95 transition-all`}
                       >
                         {/* Left: Time Info */}
                         <div className="flex-1 min-w-0">
@@ -734,7 +620,7 @@ export default function App() {
                           <span className="text-[8px] font-bold uppercase opacity-80 leading-none mb-0.5">Score</span>
                           <span className="text-xl font-black leading-none">{session.score}</span>
                         </div>
-                      </div>
+                      </button>
                     );
                   })
                 ) : (

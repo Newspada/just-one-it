@@ -1,16 +1,34 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID
+};
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// Check if Firebase is configured
+export const isFirebaseConfigured = 
+  !!firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== 'undefined' && 
+  !!firebaseConfig.projectId && 
+  firebaseConfig.projectId !== 'undefined';
+
+// Initialize Firebase only if config is present
+const app = isFirebaseConfigured ? initializeApp(firebaseConfig) : null;
+export const auth = app ? getAuth(app) : ({} as any);
+export const db = app ? getFirestore(app, firebaseConfig.firestoreDatabaseId) : ({} as any);
 export const googleProvider = new GoogleAuthProvider();
 
 // Auth functions
 export const signInWithGoogle = async () => {
+  if (!isFirebaseConfigured) {
+    throw new Error("Firebase is not configured. Please set the required environment variables.");
+  }
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
@@ -43,7 +61,10 @@ export const signInWithGoogle = async () => {
   }
 };
 
-export const logout = () => signOut(auth);
+export const logout = () => {
+  if (!isFirebaseConfigured) return Promise.resolve();
+  return signOut(auth);
+};
 
 // Error handling for Firestore
 export enum OperationType {
