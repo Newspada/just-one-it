@@ -90,13 +90,9 @@ export default function App() {
   const [isAwaitingScore, setIsAwaitingScore] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState({ total: 0, correct: 0, skipped: 0, errors: 0 });
-  const [showEn, setShowEn] = useState<boolean>(() => {
-    const saved = localStorage.getItem('showEn');
-    return saved !== null ? JSON.parse(saved) : false;
-  });
-  const [showIt, setShowIt] = useState<boolean>(() => {
-    const saved = localStorage.getItem('showIt');
-    return saved !== null ? JSON.parse(saved) : true;
+  const [language, setLanguage] = useState<'en' | 'it'>(() => {
+    const saved = localStorage.getItem('language');
+    return (saved === 'en' || saved === 'it') ? saved : 'it';
   });
   const [selectedWordIndex, setSelectedWordIndex] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
@@ -144,13 +140,12 @@ export default function App() {
 
   // Persist settings
   useEffect(() => {
-    localStorage.setItem('showEn', JSON.stringify(showEn));
-    localStorage.setItem('showIt', JSON.stringify(showIt));
+    localStorage.setItem('language', language);
     localStorage.setItem('autoHighlight', JSON.stringify(autoHighlight));
     localStorage.setItem('autoLock', JSON.stringify(autoLock));
     localStorage.setItem('soundEnabled', JSON.stringify(soundEnabled));
     localStorage.setItem('volume', JSON.stringify(volume));
-  }, [showEn, showIt, autoHighlight, autoLock, soundEnabled, volume]);
+  }, [language, autoHighlight, autoLock, soundEnabled, volume]);
 
   // Save game session to Firestore when game ends
   useEffect(() => {
@@ -464,7 +459,7 @@ export default function App() {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap gap-2 justify-center">
-                            {h.item.wordsIt.map((word: string, wIdx: number) => (
+                            {(language === 'it' ? h.item.wordsIt : h.item.words).map((word: string, wIdx: number) => (
                               <span 
                                 key={wIdx}
                                 className={`text-sm px-2 py-1 rounded-lg font-bold ${
@@ -508,7 +503,7 @@ export default function App() {
                   onClick={() => setShowSessionDetail(false)}
                   className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all active:scale-95"
                 >
-                  Back to History
+                  Back
                 </button>
               </div>
             </motion.div>
@@ -716,24 +711,18 @@ export default function App() {
 
                 {/* Language Settings */}
                 <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Languages</h3>
+                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Language</h3>
                   <div className="flex gap-2">
                     <button 
-                      onClick={() => {
-                        if (showIt && !showEn) return;
-                        setShowIt(!showIt);
-                      }}
-                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${showIt ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400 grayscale'}`}
+                      onClick={() => setLanguage('it')}
+                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'it' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400 grayscale'}`}
                     >
                       <span className="text-3xl">🇮🇹</span>
                       <span className="font-bold">Italiano</span>
                     </button>
                     <button 
-                      onClick={() => {
-                        if (showEn && !showIt) return;
-                        setShowEn(!showEn);
-                      }}
-                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${showEn ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400 grayscale'}`}
+                      onClick={() => setLanguage('en')}
+                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'en' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400 grayscale'}`}
                     >
                       <span className="text-3xl">🇬🇧</span>
                       <span className="font-bold">English</span>
@@ -969,7 +958,13 @@ export default function App() {
               >
                 {history[viewingIndex]?.item ? (
                   <>
-                    <div className="text-emerald-500 mb-1 flex items-center gap-2">
+                    <div className={`mb-1 flex items-center gap-2 ${
+                      viewingIndex === 0 || history[viewingIndex].score === 1
+                        ? 'text-emerald-500'
+                        : history[viewingIndex].score === -1
+                          ? 'text-rose-500'
+                          : 'text-slate-500'
+                    }`}>
                       <Layers size={28} />
                       <span className="text-base font-bold opacity-40">#{history[viewingIndex].item?.originalIndex}</span>
                     </div>
@@ -986,16 +981,9 @@ export default function App() {
                             isSelected ? 'scale-120' : 'scale-100 opacity-60 hover:opacity-100'
                           }`}
                         >
-                          {showIt && (
-                            <span className={`${isSelected ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl'} font-bold capitalize text-slate-800 tracking-wide transition-all`}>
-                              {history[viewingIndex].item?.wordsIt[idx]}
-                            </span>
-                          )}
-                          {showEn && (
-                            <span className={`${showIt ? (isSelected ? 'text-sm sm:text-base' : 'text-xs sm:text-sm') : (isSelected ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl')} font-semibold ${showIt ? 'text-slate-400' : 'text-slate-800'} capitalize tracking-wide transition-all`}>
-                              {word}
-                            </span>
-                          )}
+                          <span className={`${isSelected ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl'} font-bold capitalize text-slate-800 tracking-wide transition-all`}>
+                            {language === 'it' ? history[viewingIndex].item?.wordsIt[idx] : history[viewingIndex].item?.words[idx]}
+                          </span>
                         </button>
                       );
                     })}
@@ -1014,10 +1002,16 @@ export default function App() {
                       e.stopPropagation();
                       setViewingIndex(0);
                     }}
-                    className="absolute bottom-6 right-6 p-3 bg-emerald-500 text-white rounded-full shadow-lg hover:bg-emerald-600 active:scale-90 transition-all z-10"
+                    className={`absolute bottom-0 right-0 w-14 h-14 flex items-center justify-center rounded-tl-2xl rounded-br-2xl active:scale-95 transition-all z-10 ${
+                      history[viewingIndex].item === null || history[viewingIndex].score === -1
+                        ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'
+                        : history[viewingIndex].score === 1
+                          ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
+                          : 'bg-slate-500/10 text-slate-500 hover:bg-slate-500/20'
+                    }`}
                     title="Back to Current"
                   >
-                    <FastForward size={20} />
+                    <FastForward size={24} />
                   </button>
                 )}
               </motion.div>
@@ -1138,7 +1132,7 @@ export default function App() {
         </div>
 
         {/* History Indicator (Small dots) */}
-        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 px-4 h-4 items-center">
           {Array.from({ length: 13 }).map((_, i) => {
             // Fill from left to right: oldest on left, newest on right
             // history[0] is newest, history[history.length-1] is oldest
@@ -1146,12 +1140,14 @@ export default function App() {
             const histIndex = Math.min(history.length - 1, 12) - i;
             const histItem = histIndex >= 0 ? history[histIndex] : null;
             
-            let dotColor = 'bg-slate-200';
+            let dotColor = 'bg-slate-200/50';
             let isCurrent = false;
+            let isViewing = false;
 
             if (histItem) {
               // The newest item (current) is always at index 0 in our history state
               isCurrent = histIndex === 0;
+              isViewing = viewingIndex === histIndex;
               
               if (histItem.score === 1) dotColor = 'bg-emerald-500';
               else if (histItem.score === -1) dotColor = 'bg-rose-500';
@@ -1159,10 +1155,23 @@ export default function App() {
               else if (histItem.score === 0) dotColor = 'bg-slate-400';
               else dotColor = 'bg-emerald-200'; // Waiting for score
             }
+
             return (
-              <div 
+              <motion.div 
                 key={i} 
-                className={`h-1 w-1 rounded-full transition-all duration-300 ${dotColor} ${isCurrent ? 'animate-pulse scale-150' : ''}`} 
+                animate={isViewing ? {
+                  scale: [1, 1.8, 1],
+                  opacity: [1, 0.7, 1],
+                } : {
+                  scale: isCurrent ? 1.2 : 1,
+                  opacity: isCurrent ? 0.6 : 1,
+                }}
+                transition={isViewing ? {
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                } : {}}
+                className={`h-1.5 w-1.5 rounded-full transition-colors duration-300 ${dotColor}`} 
               />
             );
           })}
