@@ -1030,7 +1030,7 @@ export default function App() {
         </div>
 
         {/* Controls */}
-        <div className="pt-4 px-8 pb-14 bg-slate-50 border-t border-slate-200 flex flex-col gap-4">
+        <div className="pt-4 px-8 pb-14 bg-slate-50 border-t border-slate-200 flex flex-col gap-6">
           <div className="flex items-center justify-center gap-8">
             <button
               onClick={() => setIsBlurred(!isBlurred)}
@@ -1079,9 +1079,9 @@ export default function App() {
             <div className="flex gap-2 w-full">
               <button
                 onClick={() => handleScore(1)}
-                disabled={isLocked || viewingIndex !== 0}
+                disabled={isLocked || viewingIndex !== 0 || selectedWordIndex === null}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
-                  (isLocked || viewingIndex !== 0)
+                  (isLocked || viewingIndex !== 0 || selectedWordIndex === null)
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                     : 'bg-emerald-500 text-white hover:bg-emerald-600'
                 }`}
@@ -1091,9 +1091,9 @@ export default function App() {
               </button>
               <button
                 onClick={() => handleScore(0)}
-                disabled={isLocked || viewingIndex !== 0}
+                disabled={isLocked || viewingIndex !== 0 || selectedWordIndex === null}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
-                  (isLocked || viewingIndex !== 0)
+                  (isLocked || viewingIndex !== 0 || selectedWordIndex === null)
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                     : 'bg-slate-400 text-white hover:bg-slate-500'
                 }`}
@@ -1103,9 +1103,9 @@ export default function App() {
               </button>
               <button
                 onClick={() => handleScore(-1)}
-                disabled={isLocked || viewingIndex !== 0}
+                disabled={isLocked || viewingIndex !== 0 || selectedWordIndex === null}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
-                  (isLocked || viewingIndex !== 0)
+                  (isLocked || viewingIndex !== 0 || selectedWordIndex === null)
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                     : 'bg-rose-500 text-white hover:bg-rose-600'
                 }`}
