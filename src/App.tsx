@@ -411,7 +411,7 @@ export default function App() {
     : { bg: 'bg-rose-600', text: 'text-rose-600', btn: 'bg-rose-500', hover: 'hover:bg-rose-600' };
 
   return (
-    <div className="h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21] overflow-hidden fixed inset-0">
+    <div className="h-svh bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21] overflow-hidden fixed inset-0">
       {!isFirebaseConfigured && (
         <div className="fixed top-0 left-0 right-0 bg-amber-500 text-white text-center py-2 px-4 z-[100] font-bold text-sm flex items-center justify-center gap-2">
           <Settings size={16} className="animate-spin" />
@@ -883,7 +883,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Android-style Status Bar Area (Visual only) */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90vh] max-h-[850px] relative">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[90%] max-h-[850px] relative">
         
         {/* Header */}
         <div className={`${timeLeft <= 0 ? 'bg-rose-600' : 'bg-emerald-600'} p-4 text-white flex justify-between items-center shadow-md relative h-20 transition-colors duration-500`}>
