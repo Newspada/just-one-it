@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured } from './firebase';
@@ -464,17 +464,6 @@ export default function App() {
     ? { bg: 'bg-amber-500', text: 'text-amber-600', btn: 'bg-amber-500', hover: 'hover:bg-amber-600' }
     : { bg: 'bg-rose-600', text: 'text-rose-600', btn: 'bg-rose-500', hover: 'hover:bg-rose-600' };
 
-  if (authLoading) {
-    return (
-      <div className="h-svh bg-[#F0F2F5] flex items-center justify-center p-4 font-sans text-[#1C1E21]">
-        <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="animate-spin text-emerald-500" size={48} />
-          <p className="text-slate-500 font-medium">Loading app...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-svh bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21] overflow-hidden fixed inset-0">
       {!isFirebaseConfigured && (
@@ -550,6 +539,42 @@ export default function App() {
               </div>
 
               <div className="p-4 bg-slate-50 border-t border-slate-100">
+                {(() => {
+                  const displayParticipants = Array.from(new Set([selectedSession.userId, ...(selectedSession.participants || [])]))
+                    .filter(uid => uid !== user?.uid);
+                  
+                  if (displayParticipants.length === 0) return null;
+
+                  return (
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="col-start-3 flex justify-end">
+                        <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-sm">
+                          <span className="text-[9px] font-black text-slate-400 uppercase mr-0.5">With</span>
+                          <div className="flex -space-x-2">
+                            {displayParticipants.map((uid: string, pIdx: number) => {
+                              const friend = friendships.find(f => f.friendProfile?.uid === uid);
+                              const profile = friend?.friendProfile;
+                              const isOrganizer = uid === selectedSession.userId;
+                              return (
+                                <div 
+                                  key={pIdx} 
+                                  className={`w-6 h-6 rounded-full border-2 ${isOrganizer ? 'border-emerald-500' : 'border-white'} bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm`} 
+                                  title={`${profile?.displayName || 'Friend'}${isOrganizer ? ' (Organizer)' : ''}`}
+                                >
+                                  {profile?.photoURL ? (
+                                    <img src={profile.photoURL} alt={profile.displayName || 'Friend'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  ) : (
+                                    <UserIcon size={12} className="text-slate-400" />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="bg-white p-2 rounded-xl border border-slate-200 text-center">
                     <span className="text-[10px] font-black text-emerald-500 uppercase block">Correct</span>
@@ -807,7 +832,7 @@ export default function App() {
                           setSelectedSession(session);
                           setShowSessionDetail(true);
                         }}
-                        className={`w-full text-left p-3 rounded-2xl border ${isParticipant ? 'border-emerald-500 border-2' : theme.bg} ${isParticipant ? 'bg-white' : theme.bg} flex items-center gap-3 shadow-sm hover:scale-[1.02] active:scale-95 transition-all`}
+                        className={`w-full text-left p-3 rounded-2xl border ${theme.bg} ${isParticipant ? '!border-emerald-500 !border-2' : ''} flex items-center gap-3 shadow-sm hover:scale-[1.02] active:scale-95 transition-all`}
                       >
                         {/* Left: Time Info */}
                         <div className="flex-1 min-w-0">
@@ -816,6 +841,12 @@ export default function App() {
                             <span className="text-xs font-bold truncate">
                               {getRelativeTime(date)}
                             </span>
+                            {session.participants && session.participants.length > 0 && (
+                              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded-md text-[8px] font-black uppercase">
+                                <Users size={8} />
+                                <span>{session.participants.length}</span>
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5 text-slate-600">
                             <Clock size={14} />
@@ -1154,10 +1185,13 @@ export default function App() {
                 <>
                   <button 
                     onClick={() => setShowFriends(true)}
-                    className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all text-white"
+                    className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all text-white relative"
                     title="Friends"
                   >
                     <Contact size={20} />
+                    {friendships.some(f => f.toUid === user?.uid && f.status === 'pending') && (
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-emerald-600" />
+                    )}
                   </button>
                   <button 
                     onClick={() => fetchHistory()}
@@ -1183,7 +1217,18 @@ export default function App() {
         <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
           <div className="flex-1 w-full flex items-center justify-center p-2">
             <AnimatePresence mode="wait">
-            {history.length > 0 ? (
+            {authLoading || !friendshipsLoaded ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center gap-4"
+              >
+                <RefreshCw className="animate-spin text-emerald-500" size={48} />
+                <p className="text-slate-500 font-medium">Loading app...</p>
+              </motion.div>
+            ) : history.length > 0 ? (
               <motion.div
                 key={history[viewingIndex]?.item?.id || `penalty-${viewingIndex}`}
                 initial={{ opacity: 0, x: 40 }}
@@ -1268,12 +1313,11 @@ export default function App() {
                 )}
               </motion.div>
             ) : (
-              friendshipsLoaded && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="w-full max-w-md space-y-6"
-                >
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-md space-y-6"
+              >
                 <div className="text-slate-400 text-center mb-8">
                   <Layers size={64} className="mx-auto mb-4 opacity-20" />
                   <p className="text-lg font-medium">Tap the button to start a new game</p>
@@ -1317,9 +1361,6 @@ export default function App() {
                                 </div>
                               )}
                             </div>
-                            <span className="text-[10px] font-bold text-slate-600 truncate w-full text-center">
-                              {f.friendProfile?.displayName?.split(' ')[0]}
-                            </span>
                           </button>
                         );
                       })}
@@ -1327,7 +1368,7 @@ export default function App() {
                   </div>
                 )}
               </motion.div>
-            ))}
+            )}
             </AnimatePresence>
           </div>
         </div>
