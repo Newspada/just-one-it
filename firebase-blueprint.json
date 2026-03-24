@@ -20,6 +20,11 @@
       "type": "object",
       "properties": {
         "userId": { "type": "string", "description": "UID of the user who played" },
+        "participants": { 
+          "type": "array", 
+          "items": { "type": "string" },
+          "description": "List of UIDs of friends invited to this session" 
+        },
         "score": { "type": "integer", "description": "Total score achieved" },
         "correct": { "type": "integer", "description": "Number of correct answers" },
         "skipped": { "type": "integer", "description": "Number of skipped items" },
@@ -28,6 +33,23 @@
         "timestamp": { "type": "string", "format": "date-time", "description": "When the game was completed" }
       },
       "required": ["userId", "score", "timestamp"]
+    },
+    "Friendship": {
+      "title": "Friendship",
+      "description": "Represents a friendship or a friend request between two users",
+      "type": "object",
+      "properties": {
+        "fromUid": { "type": "string", "description": "UID of the user who sent the request" },
+        "toUid": { "type": "string", "description": "UID of the user who received the request" },
+        "status": { 
+          "type": "string", 
+          "enum": ["pending", "accepted", "declined"],
+          "description": "Current status of the friendship" 
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the request was sent" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "When the status was last updated" }
+      },
+      "required": ["fromUid", "toUid", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -38,6 +60,10 @@
     "/gameSessions/{sessionId}": {
       "schema": "GameSession",
       "description": "Game session history"
+    },
+    "/friendships/{friendshipId}": {
+      "schema": "Friendship",
+      "description": "Friendship and request records"
     }
   }
 }

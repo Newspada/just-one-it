@@ -19,6 +19,7 @@ service cloud.firestore {
     // Document ID: {sessionId} (Auto-generated)
     // Fields:
     //   - userId: string (required) - UID of the user who played
+    //   - participants: list (optional) - List of UIDs of friends invited
     //   - score: number (required) - Total score achieved
     //   - correct: number (required) - Number of correct answers
     //   - skipped: number (required) - Number of skipped items
@@ -78,7 +79,8 @@ service cloud.firestore {
              data.skipped is number &&
              data.errors is number &&
              data.duration is number &&
-             data.timestamp is timestamp;
+             data.timestamp is timestamp &&
+             (!('participants' in data) || (data.participants is list && data.participants.size() <= 6));
     }
 
     // ===============================================================
@@ -86,14 +88,40 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isAuthenticated();
       allow create: if isOwner(userId) && isValidUser(request.resource.data);
       allow update: if isOwner(userId) && isValidUser(request.resource.data);
       allow delete: if isAdmin();
     }
 
+    match /friendships/{friendshipId} {
+      function isFriendshipParticipant() {
+        return isAuthenticated() && (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
+      }
+      
+      function isValidFriendship(data) {
+        return data.keys().hasAll(['fromUid', 'toUid', 'status', 'createdAt']) &&
+               data.fromUid == request.auth.uid &&
+               data.status == 'pending' &&
+               data.fromUid != data.toUid;
+      }
+
+      allow read: if isFriendshipParticipant();
+      allow create: if isAuthenticated() && isValidFriendship(request.resource.data);
+      allow update: if isAuthenticated() && 
+                    (
+                      // Receiver can accept or decline
+                      (request.auth.uid == resource.data.toUid && request.resource.data.status in ['accepted', 'declined']) ||
+                      // Sender can cancel (delete or set to declined/cancelled)
+                      (request.auth.uid == resource.data.fromUid && request.resource.data.status == 'declined')
+                    ) &&
+                    request.resource.data.fromUid == resource.data.fromUid &&
+                    request.resource.data.toUid == resource.data.toUid;
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.fromUid || request.auth.uid == resource.data.toUid);
+    }
+
     match /gameSessions/{sessionId} {
-      allow read: if isDocOwner() || isAdmin();
+      allow read: if isDocOwner() || isAdmin() || (isAuthenticated() && request.auth.uid in resource.data.get('participants', []));
       allow create: if isAuthenticated() && isValidGameSession(request.resource.data);
       allow update: if false; // Game sessions are immutable
       allow delete: if isAdmin();
