@@ -4,14 +4,23 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3 } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, where, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, where, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { STATIC_ITEMS } from './data/words_en';
 import { STATIC_ITEMS_IT } from './data/words_it';
+import { 
+  sendFriendRequestByEmail, 
+  acceptFriendRequest, 
+  declineFriendRequest, 
+  removeFriend, 
+  subscribeToFriendships,
+  Friendship as FriendshipType,
+  UserProfile
+} from './services/friendshipService';
 
 // Sound Effects
 const SOUNDS = {
@@ -125,6 +134,17 @@ export default function App() {
   const [showSessionDetail, setShowSessionDetail] = useState(false);
   const hasSavedSession = useRef(false);
 
+  // Friendship state
+  const [showFriends, setShowFriends] = useState(false);
+  const [friendships, setFriendships] = useState<FriendshipType[]>([]);
+  const [friendEmail, setFriendEmail] = useState('');
+  const [friendActionLoading, setFriendActionLoading] = useState(false);
+  const [friendError, setFriendError] = useState<string | null>(null);
+  const [friendSuccess, setFriendSuccess] = useState<string | null>(null);
+
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
+  const [friendshipsLoaded, setFriendshipsLoaded] = useState(false);
+
   // Auth listener
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -137,6 +157,21 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  // Friendship listener
+  useEffect(() => {
+    if (!user) {
+      setFriendships([]);
+      setFriendshipsLoaded(true);
+      return;
+    }
+    setFriendshipsLoaded(false);
+    const unsubscribe = subscribeToFriendships(user.uid, (updatedFriendships) => {
+      setFriendships(updatedFriendships);
+      setFriendshipsLoaded(true);
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   // Persist settings
   useEffect(() => {
@@ -155,6 +190,7 @@ export default function App() {
       hasSavedSession.current = true;
       addDoc(collection(db, path), {
         userId: auth.currentUser.uid,
+        participants: selectedParticipants,
         score: summaryData.total,
         correct: summaryData.correct,
         skipped: summaryData.skipped,
@@ -171,7 +207,7 @@ export default function App() {
     if (!showSummary) {
       hasSavedSession.current = false;
     }
-  }, [showSummary, auth.currentUser, summaryData]);
+  }, [showSummary, auth.currentUser, summaryData, timeLeft, history, selectedParticipants]);
 
   const fetchHistory = async () => {
     if (!auth.currentUser) return;
@@ -180,18 +216,35 @@ export default function App() {
     setHistoryError(null);
     const path = 'gameSessions';
     try {
-      const q = query(
+      const q1 = query(
         collection(db, path),
         where('userId', '==', auth.currentUser.uid),
         orderBy('timestamp', 'desc'),
         limit(20)
       );
-      const querySnapshot = await getDocs(q);
-      const fetchedSessions = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setSessions(fetchedSessions);
+      
+      const q2 = query(
+        collection(db, path),
+        where('participants', 'array-contains', auth.currentUser.uid),
+        orderBy('timestamp', 'desc'),
+        limit(20)
+      );
+
+      const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+      
+      const fetchedSessions = [
+        ...snap1.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+        ...snap2.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      ];
+
+      const uniqueSessions = Array.from(new Map(fetchedSessions.map(item => [item.id, item])).values())
+        .sort((a: any, b: any) => {
+          const tA = a.timestamp?.seconds || 0;
+          const tB = b.timestamp?.seconds || 0;
+          return tB - tA;
+        });
+
+      setSessions(uniqueSessions);
     } catch (error: any) {
       console.error('History fetch error:', error);
       setHistoryError(error.message || 'Failed to load history');
@@ -219,6 +272,7 @@ export default function App() {
     setIsAwaitingScore(false);
     setShowSummary(false);
     setSelectedWordIndex(null);
+    setSelectedParticipants([]);
     setTimeLeft(30 * 60);
     setIsTimerActive(false);
   }, []);
@@ -410,6 +464,17 @@ export default function App() {
     ? { bg: 'bg-amber-500', text: 'text-amber-600', btn: 'bg-amber-500', hover: 'hover:bg-amber-600' }
     : { bg: 'bg-rose-600', text: 'text-rose-600', btn: 'bg-rose-500', hover: 'hover:bg-rose-600' };
 
+  if (authLoading) {
+    return (
+      <div className="h-svh bg-[#F0F2F5] flex items-center justify-center p-4 font-sans text-[#1C1E21]">
+        <div className="flex flex-col items-center gap-4">
+          <RefreshCw className="animate-spin text-emerald-500" size={48} />
+          <p className="text-slate-500 font-medium">Loading app...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-svh bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21] overflow-hidden fixed inset-0">
       {!isFirebaseConfigured && (
@@ -511,6 +576,183 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Friends Modal */}
+      <AnimatePresence>
+        {showFriends && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh]"
+            >
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Friends List */}
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    {friendships.filter(f => f.status === 'accepted').length > 0 ? (
+                      friendships.filter(f => f.status === 'accepted').map(f => (
+                        <div key={f.id} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={f.friendProfile?.photoURL || ''} 
+                              alt={f.friendProfile?.displayName || 'User'} 
+                              className="w-10 h-10 rounded-full border border-white shadow-sm"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-slate-800 leading-none">{f.friendProfile?.displayName}</span>
+                              <span className="text-[10px] text-slate-400">{f.friendProfile?.email}</span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to remove ${f.friendProfile?.displayName} from your friends?`)) {
+                                removeFriend(f.id);
+                              }
+                            }}
+                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                            title="Remove Friend"
+                          >
+                            <UserX size={20} />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <Search size={32} className="mx-auto text-slate-200 mb-2" />
+                        <p className="text-slate-400 text-sm">No friends yet. Add some!</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Incoming Requests */}
+                {friendships.some(f => f.toUid === user?.uid && f.status === 'pending') && (
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Incoming Requests</h3>
+                    <div className="space-y-2">
+                      {friendships.filter(f => f.toUid === user?.uid && f.status === 'pending').map(f => (
+                        <div key={f.id} className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={f.friendProfile?.photoURL || ''} 
+                              alt={f.friendProfile?.displayName || 'User'} 
+                              className="w-10 h-10 rounded-full border border-white shadow-sm"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-slate-800 leading-none">{f.friendProfile?.displayName}</span>
+                              <span className="text-[10px] text-slate-400">{f.friendProfile?.email}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={() => acceptFriendRequest(f.id)}
+                              className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all"
+                              title="Accept"
+                            >
+                              <UserCheck size={20} />
+                            </button>
+                            <button 
+                              onClick={() => declineFriendRequest(f.id)}
+                              className="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition-all"
+                              title="Decline"
+                            >
+                              <UserX size={20} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Outgoing Requests */}
+                {friendships.some(f => f.fromUid === user?.uid && f.status === 'pending') && (
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Sent Requests</h3>
+                    <div className="space-y-2">
+                      {friendships.filter(f => f.fromUid === user?.uid && f.status === 'pending').map(f => (
+                        <div key={f.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl">
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={f.friendProfile?.photoURL || ''} 
+                              alt={f.friendProfile?.displayName || 'User'} 
+                              className="w-10 h-10 rounded-full border border-white shadow-sm"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-slate-800 leading-none">{f.friendProfile?.displayName}</span>
+                              <span className="text-[10px] text-slate-400">{f.friendProfile?.email}</span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => removeFriend(f.id)}
+                            className="p-2 text-slate-400 hover:bg-slate-200 rounded-xl transition-all"
+                            title="Cancel Request"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add Friend Section */}
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input 
+                        type="email" 
+                        placeholder="Friend's email"
+                        value={friendEmail}
+                        onChange={(e) => setFriendEmail(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 transition-all text-sm"
+                      />
+                    </div>
+                    <button 
+                      onClick={async () => {
+                        if (!friendEmail) return;
+                        setFriendActionLoading(true);
+                        setFriendError(null);
+                        setFriendSuccess(null);
+                        try {
+                          await sendFriendRequestByEmail(friendEmail);
+                          setFriendSuccess('Request sent!');
+                          setFriendEmail('');
+                        } catch (err: any) {
+                          setFriendError(err.message);
+                        } finally {
+                          setFriendActionLoading(false);
+                        }
+                      }}
+                      disabled={friendActionLoading || !friendEmail}
+                      className="px-4 bg-emerald-500 text-white rounded-2xl font-bold hover:bg-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      {friendActionLoading ? <RefreshCw size={20} className="animate-spin" /> : <UserPlus size={20} />}
+                    </button>
+                  </div>
+                  {friendError && <p className="text-xs text-rose-500 font-medium px-1">{friendError}</p>}
+                  {friendSuccess && <p className="text-xs text-emerald-500 font-medium px-1">{friendSuccess}</p>}
+                </div>
+              </div>
+
+              <div className="p-6 bg-slate-50 border-t border-slate-100">
+                <button
+                  onClick={() => setShowFriends(false)}
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all active:scale-95"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* History Modal */}
       <AnimatePresence>
         {showHistory && (
@@ -549,6 +791,7 @@ export default function App() {
                       ? session.timestamp.toDate() 
                       : new Date(session.timestamp?.seconds * 1000 || Date.now());
                     
+                    const isParticipant = session.userId !== user?.uid;
                     const theme = session.score >= 11 
                       ? { bg: 'bg-yellow-50 border-yellow-100', text: 'text-yellow-600', accent: 'bg-yellow-500' }
                       : session.score >= 7
@@ -564,7 +807,7 @@ export default function App() {
                           setSelectedSession(session);
                           setShowSessionDetail(true);
                         }}
-                        className={`w-full text-left p-3 rounded-2xl border ${theme.bg} flex items-center gap-3 shadow-sm hover:scale-[1.02] active:scale-95 transition-all`}
+                        className={`w-full text-left p-3 rounded-2xl border ${isParticipant ? 'border-emerald-500 border-2' : theme.bg} ${isParticipant ? 'bg-white' : theme.bg} flex items-center gap-3 shadow-sm hover:scale-[1.02] active:scale-95 transition-all`}
                       >
                         {/* Left: Time Info */}
                         <div className="flex-1 min-w-0">
@@ -908,13 +1151,22 @@ export default function App() {
           <div className="flex flex-col items-end z-10">
             <div className="flex items-center gap-2">
               {user && (
-                <button 
-                  onClick={() => fetchHistory()}
-                  className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all text-white"
-                  title="History"
-                >
-                  <BarChart3 size={20} />
-                </button>
+                <>
+                  <button 
+                    onClick={() => setShowFriends(true)}
+                    className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all text-white"
+                    title="Friends"
+                  >
+                    <Contact size={20} />
+                  </button>
+                  <button 
+                    onClick={() => fetchHistory()}
+                    className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all text-white"
+                    title="History"
+                  >
+                    <BarChart3 size={20} />
+                  </button>
+                </>
               )}
               <button 
                 onClick={() => setShowSettings(true)}
@@ -1016,15 +1268,66 @@ export default function App() {
                 )}
               </motion.div>
             ) : (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-slate-400 text-center"
-              >
-                <Layers size={64} className="mx-auto mb-4 opacity-20" />
-                <p className="text-lg font-medium">Tap the button to start a new game</p>
+              friendshipsLoaded && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="w-full max-w-md space-y-6"
+                >
+                <div className="text-slate-400 text-center mb-8">
+                  <Layers size={64} className="mx-auto mb-4 opacity-20" />
+                  <p className="text-lg font-medium">Tap the button to start a new game</p>
+                </div>
+
+                {user && friendships.filter(f => f.status === 'accepted').length > 0 && (
+                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-slate-800">Participants</h3>
+                      <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">
+                        {selectedParticipants.length + 1} / 7
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-3">
+                      {friendships.filter(f => f.status === 'accepted').map(f => {
+                        const isSelected = selectedParticipants.includes(f.friendProfile?.uid || '');
+                        return (
+                          <button
+                            key={f.id}
+                            onClick={() => {
+                              const uid = f.friendProfile?.uid;
+                              if (!uid) return;
+                              if (isSelected) {
+                                setSelectedParticipants(prev => prev.filter(id => id !== uid));
+                              } else if (selectedParticipants.length < 6) {
+                                setSelectedParticipants(prev => [...prev, uid]);
+                              }
+                            }}
+                            className={`flex flex-col items-center gap-1 transition-all ${isSelected ? 'scale-105' : 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                          >
+                            <div className={`relative p-0.5 rounded-full border-2 transition-all ${isSelected ? 'border-emerald-500' : 'border-transparent'}`}>
+                              <img 
+                                src={f.friendProfile?.photoURL || ''} 
+                                alt={f.friendProfile?.displayName || 'User'} 
+                                className="w-12 h-12 rounded-full"
+                                referrerPolicy="no-referrer"
+                              />
+                              {isSelected && (
+                                <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
+                                  <Check size={10} strokeWidth={4} />
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-600 truncate w-full text-center">
+                              {f.friendProfile?.displayName?.split(' ')[0]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </motion.div>
-            )}
+            ))}
             </AnimatePresence>
           </div>
         </div>
