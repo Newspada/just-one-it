@@ -1120,7 +1120,7 @@ export default function App() {
                                 setNewDisplayName(user.displayName || '');
                                 setIsEditingName(true);
                               }}
-                              className="p-1 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                              className="p-1 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
                               title="Edit Name"
                             >
                               <Edit2 size={14} />
