@@ -1113,7 +1113,7 @@ export default function App() {
                             )}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 group">
+                          <div className="flex items-center gap-1 group">
                             <span className="text-sm font-bold text-slate-800 leading-none">{user.displayName}</span>
                             <button
                               onClick={() => {
@@ -1246,15 +1246,25 @@ export default function App() {
                         type="range" 
                         min="0" 
                         max="1" 
-                        step="0.01" 
+                        step="0.05" 
                         value={volume}
-                        onChange={(e) => setVolume(parseFloat(e.target.value))}
-                        className="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setVolume(val);
+                          if (!soundEnabled && val > 0) setSoundEnabled(true);
+                        }}
+                        onMouseUp={() => playSound(SOUNDS.CORRECT)}
+                        onTouchEnd={() => playSound(SOUNDS.CORRECT)}
+                        className="flex-1 h-2 rounded-lg appearance-none cursor-pointer"
                         style={{
                           background: `linear-gradient(to right, #10b981 0%, #10b981 ${volume * 100}%, #e2e8f0 ${volume * 100}%, #e2e8f0 100%)`
                         }}
                       />
-                      <span className="text-xs font-bold text-slate-500 min-w-[32px] text-right">
+                      <span 
+                        onClick={() => playSound(SOUNDS.CORRECT)}
+                        className="text-xs font-bold text-slate-500 min-w-[32px] text-right cursor-pointer transition-colors"
+                        title="Click to test volume"
+                      >
                         {Math.round(volume * 100)}%
                       </span>
                     </div>
@@ -1577,6 +1587,7 @@ export default function App() {
                     onClick={(e) => {
                       e.stopPropagation();
                       setViewingIndex(0);
+                      playSound(SOUNDS.SWIPE);
                     }}
                     className={`absolute bottom-0 right-0 w-14 h-14 flex items-center justify-center rounded-tl-2xl rounded-br-2xl active:scale-95 transition-all z-10 ${
                       history[viewingIndex].item === null || history[viewingIndex].score === -1
