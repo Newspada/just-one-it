@@ -4,10 +4,12 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users, Folder } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users, Folder, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured } from './firebase';
+import { Filter } from 'bad-words';
+import { italianProfanities } from './lib/profanity';
+import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured, updateUserDisplayName } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, where, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { STATIC_ITEMS } from './data/words_en';
@@ -158,6 +160,10 @@ export default function App() {
   const [friendshipsLoaded, setFriendshipsLoaded] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [friendshipToRemove, setFriendshipToRemove] = useState<FriendshipType | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [isUpdatingName, setIsUpdatingName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // Auth listener
   useEffect(() => {
@@ -449,6 +455,35 @@ export default function App() {
     });
 
     setIsAwaitingScore(false);
+  };
+
+  const handleSaveName = async () => {
+    if (!newDisplayName.trim() || !user) return;
+    
+    // Profanity filter
+    const filter = new Filter();
+    filter.addWords(...italianProfanities);
+
+    if (filter.isProfane(newDisplayName)) {
+      setNameError('Name contains offensive language');
+      return;
+    }
+
+    setNameError(null);
+    setIsUpdatingName(true);
+    try {
+      await updateUserDisplayName(newDisplayName.trim());
+      setIsEditingName(false);
+      // Force refresh user state to show new name
+      if (auth.currentUser) {
+        setUser({ ...auth.currentUser } as User);
+      }
+    } catch (error) {
+      console.error("Failed to update name:", error);
+      setNameError('Error updating name');
+    } finally {
+      setIsUpdatingName(false);
+    }
   };
 
   const closeFriends = () => {
@@ -821,7 +856,7 @@ export default function App() {
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                       <input 
                         type="email" 
-                        placeholder="Friend's email"
+                        placeholder="Invite a friend"
                         value={friendEmail}
                         onChange={(e) => {
                           setFriendEmail(e.target.value);
@@ -1027,28 +1062,86 @@ export default function App() {
                 {/* Auth Section */}
                 {user ? (
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-1">
                       <img 
                         src={user.photoURL || ''} 
                         alt={user.displayName || 'User'} 
                         className="w-10 h-10 rounded-full border border-white shadow-sm"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-800 leading-none">{user.displayName}</span>
+                      <div className="flex flex-col flex-1">
+                        {isEditingName ? (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={newDisplayName}
+                                onChange={(e) => {
+                                  setNewDisplayName(e.target.value);
+                                  setNameError(null);
+                                }}
+                                className={`w-full px-2 py-1 text-sm font-bold bg-white border rounded-lg focus:outline-none ${nameError ? 'border-rose-500' : 'border-slate-200 focus:border-emerald-500'}`}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveName();
+                                  if (e.key === 'Escape') {
+                                    setIsEditingName(false);
+                                    setNameError(null);
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={handleSaveName}
+                                disabled={isUpdatingName || !newDisplayName.trim()}
+                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-50"
+                              >
+                                {isUpdatingName ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setIsEditingName(false);
+                                  setNameError(null);
+                                }}
+                                disabled={isUpdatingName}
+                                className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                            {nameError && (
+                              <span className="text-[10px] text-rose-500 font-medium px-1">{nameError}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 group">
+                            <span className="text-sm font-bold text-slate-800 leading-none">{user.displayName}</span>
+                            <button
+                              onClick={() => {
+                                setNewDisplayName(user.displayName || '');
+                                setIsEditingName(true);
+                              }}
+                              className="p-1 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                              title="Edit Name"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                          </div>
+                        )}
                         <span className="text-[10px] text-slate-400">{user.email}</span>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => {
-                        logout();
-                        setShowSettings(false);
-                      }}
-                      className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                      title="Logout"
-                    >
-                      <LogOut size={20} />
-                    </button>
+                    {!isEditingName && (
+                      <button 
+                        onClick={() => {
+                          logout();
+                          setShowSettings(false);
+                        }}
+                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all ml-2"
+                        title="Logout"
+                      >
+                        <LogOut size={20} />
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <button 
