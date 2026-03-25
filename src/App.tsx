@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users, Folder } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured } from './firebase';
@@ -1376,7 +1376,7 @@ export default function App() {
                     className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all text-white"
                     title="History"
                   >
-                    <BarChart3 size={20} />
+                    <Trophy size={20} />
                   </button>
                 </>
               )}
