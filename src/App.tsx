@@ -460,6 +460,40 @@ export default function App() {
     setIsTimerActive(false);
   };
 
+  // PWA Back button handling: push state when a modal opens
+  const prevModals = useRef({
+    showSummary, showSettings, showHistory, showSessionDetail, showFriends, showAvatarPicker
+  });
+
+  useEffect(() => {
+    const current = {
+      showSummary, showSettings, showHistory, showSessionDetail, showFriends, showAvatarPicker
+    };
+
+    const opened = (Object.keys(current) as Array<keyof typeof current>).some(key => current[key] && !prevModals.current[key]);
+    
+    if (opened) {
+      window.history.pushState({ isModal: true }, '');
+    }
+
+    prevModals.current = current;
+  }, [showSummary, showSettings, showHistory, showSessionDetail, showFriends, showAvatarPicker]);
+
+  // Handle back button (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (showAvatarPicker) setShowAvatarPicker(false);
+      else if (showSessionDetail) setShowSessionDetail(false);
+      else if (showSummary) closeSummary();
+      else if (showHistory) setShowHistory(false);
+      else if (showFriends) setShowFriends(false);
+      else if (showSettings) setShowSettings(false);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showSummary, showSettings, showHistory, showSessionDetail, showFriends, showAvatarPicker, closeSummary]);
+
   const toggleLock = () => {
     setIsLocked(!isLocked);
   };
