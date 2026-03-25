@@ -973,12 +973,6 @@ export default function App() {
                             <span className="text-xs font-bold truncate">
                               {getRelativeTime(date)}
                             </span>
-                            {session.participants && session.participants.length > 0 && (
-                              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-100 text-emerald-600 rounded-md text-[8px] font-black uppercase">
-                                <Users size={8} />
-                                <span>{session.participants.length}</span>
-                              </div>
-                            )}
                           </div>
                           <div className="flex items-center gap-1.5 text-slate-600">
                             <Clock size={14} />
