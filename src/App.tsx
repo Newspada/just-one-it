@@ -1518,6 +1518,21 @@ export default function App() {
                       </span>
                     </div>
                     <div className="grid grid-cols-4 gap-3">
+                      {/* Current User (Always selected) */}
+                      <div className="flex flex-col items-center gap-1 transition-all scale-105">
+                        <div className="relative p-0.5 rounded-full border-2 border-emerald-500 transition-all">
+                          <img 
+                            src={user.photoURL || ''} 
+                            alt={user.displayName || 'Me'} 
+                            className="w-12 h-12 rounded-full"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
+                            <Check size={10} strokeWidth={4} />
+                          </div>
+                        </div>
+                      </div>
+
                       {friendships.filter(f => f.status === 'accepted').map(f => {
                         const isSelected = selectedParticipants.includes(f.friendProfile?.uid || '');
                         return (

@@ -127,6 +127,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /invitations/{invitationId} {
+      function isValidInvitation(data) {
+        return data.keys().hasAll(['email', 'invitedBy', 'status', 'createdAt']) &&
+               data.invitedBy == request.auth.uid &&
+               isValidEmail(data.email) &&
+               data.status == 'sent';
+      }
+
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.invitedBy || request.auth.token.email == resource.data.email);
+      allow create: if isAuthenticated() && isValidInvitation(request.resource.data);
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.token.email == resource.data.email && request.resource.data.status == 'accepted');
+      allow delete: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.invitedBy);
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;
