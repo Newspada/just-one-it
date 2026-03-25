@@ -823,13 +823,21 @@ export default function App() {
                         type="email" 
                         placeholder="Friend's email"
                         value={friendEmail}
-                        onChange={(e) => setFriendEmail(e.target.value)}
+                        onChange={(e) => {
+                          setFriendEmail(e.target.value);
+                          if (friendError) setFriendError(null);
+                        }}
                         className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 transition-all text-sm"
                       />
                     </div>
                     <button 
                       onClick={async () => {
                         if (!friendEmail) return;
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(friendEmail)) {
+                          setFriendError('Invalid email format');
+                          return;
+                        }
                         setFriendActionLoading(true);
                         setFriendError(null);
                         setFriendSuccess(null);
