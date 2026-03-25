@@ -35,6 +35,17 @@ const SOUNDS = {
   WIN_LOW: 'https://assets.mixkit.co/active_storage/sfx/2043/2043-preview.mp3',
 };
 
+const GUEST_AVATARS = [
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Milo',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Maya',
+];
+
 // Types
 interface Item {
   id: number;
@@ -143,7 +154,9 @@ export default function App() {
   const [friendSuccess, setFriendSuccess] = useState<string | null>(null);
 
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
+  const [guests, setGuests] = useState<{uid: string, displayName: string, photoURL: string}[]>([]);
   const [friendshipsLoaded, setFriendshipsLoaded] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   // Auth listener
   useEffect(() => {
@@ -190,7 +203,14 @@ export default function App() {
       hasSavedSession.current = true;
       addDoc(collection(db, path), {
         userId: auth.currentUser.uid,
-        participants: selectedParticipants,
+        participants: [...selectedParticipants].sort((a, b) => {
+          const aIsFriend = friendships.some(f => f.friendProfile?.uid === a && f.status === 'accepted');
+          const bIsFriend = friendships.some(f => f.friendProfile?.uid === b && f.status === 'accepted');
+          if (aIsFriend && !bIsFriend) return -1;
+          if (!aIsFriend && bIsFriend) return 1;
+          return 0;
+        }),
+        guestInfo: guests.filter(g => selectedParticipants.includes(g.uid)),
         score: summaryData.total,
         correct: summaryData.correct,
         skipped: summaryData.skipped,
@@ -273,6 +293,7 @@ export default function App() {
     setShowSummary(false);
     setSelectedWordIndex(null);
     setSelectedParticipants([]);
+    setGuests([]);
     setTimeLeft(30 * 60);
     setIsTimerActive(false);
   }, []);
@@ -297,6 +318,23 @@ export default function App() {
   useEffect(() => {
     initializePool();
   }, [initializePool]);
+
+  const handleAddGuest = () => {
+    if (selectedParticipants.length >= 6) return;
+    setShowAvatarPicker(true);
+  };
+
+  const confirmAddGuest = (avatarUrl: string) => {
+    const guestId = `guest-${Date.now()}`;
+    const newGuest = {
+      uid: guestId,
+      displayName: `Guest ${guests.length + 1}`,
+      photoURL: avatarUrl
+    };
+    setGuests(prev => [...prev, newGuest]);
+    setSelectedParticipants(prev => [...prev, guestId]);
+    setShowAvatarPicker(false);
+  };
 
   const extractItem = () => {
     if (isLocked || pool.length === 0 || isAwaitingScore) return;
@@ -541,7 +579,14 @@ export default function App() {
               <div className="p-4 bg-slate-50 border-t border-slate-100">
                 {(() => {
                   const displayParticipants = Array.from(new Set([selectedSession.userId, ...(selectedSession.participants || [])]))
-                    .filter(uid => uid !== user?.uid);
+                    .filter(uid => uid !== user?.uid)
+                    .sort((a, b) => {
+                      const aIsFriend = friendships.some(f => f.friendProfile?.uid === a && f.status === 'accepted');
+                      const bIsFriend = friendships.some(f => f.friendProfile?.uid === b && f.status === 'accepted');
+                      if (aIsFriend && !bIsFriend) return -1;
+                      if (!aIsFriend && bIsFriend) return 1;
+                      return 0;
+                    });
                   
                   if (displayParticipants.length === 0) return null;
 
@@ -553,7 +598,8 @@ export default function App() {
                           <div className="flex -space-x-2">
                             {displayParticipants.map((uid: string, pIdx: number) => {
                               const friend = friendships.find(f => f.friendProfile?.uid === uid);
-                              const profile = friend?.friendProfile;
+                              const guest = selectedSession.guestInfo?.find((g: any) => g.uid === uid);
+                              const profile = friend?.friendProfile || guest;
                               const isOrganizer = uid === selectedSession.userId;
                               return (
                                 <div 
@@ -1094,6 +1140,53 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Avatar Picker Modal */}
+      <AnimatePresence>
+        {showAvatarPicker && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-slate-800">Choose Avatar</h2>
+                <button onClick={() => setShowAvatarPicker(false)} className="p-2 text-slate-400 hover:text-slate-600">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-4">
+                {GUEST_AVATARS.map((avatar, idx) => {
+                  const isTaken = (user?.photoURL === avatar) || guests.some(g => g.photoURL === avatar);
+                  return (
+                    <button
+                      key={idx}
+                      disabled={isTaken}
+                      onClick={() => confirmAddGuest(avatar)}
+                      className={`relative group transition-all ${isTaken ? 'opacity-20 cursor-not-allowed' : 'active:scale-90'}`}
+                    >
+                      <img 
+                        src={avatar} 
+                        alt={`Avatar ${idx}`} 
+                        className={`w-full aspect-square rounded-full border-2 transition-all ${isTaken ? 'border-transparent' : 'border-transparent group-hover:border-emerald-500'}`}
+                        referrerPolicy="no-referrer"
+                      />
+                      {isTaken && (
+                        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                          <X size={16} strokeWidth={3} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Summary Modal */}
       <AnimatePresence>
         {showSummary && (
@@ -1323,7 +1416,7 @@ export default function App() {
                   <p className="text-lg font-medium">Tap the button to start a new game</p>
                 </div>
 
-                {user && friendships.filter(f => f.status === 'accepted').length > 0 && (
+                {user && (
                   <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-bold text-slate-800">Participants</h3>
@@ -1364,6 +1457,48 @@ export default function App() {
                           </button>
                         );
                       })}
+                      {guests.map(g => {
+                        const isSelected = selectedParticipants.includes(g.uid);
+                        return (
+                          <button
+                            key={g.uid}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedParticipants(prev => prev.filter(id => id !== g.uid));
+                                setGuests(prev => prev.filter(guest => guest.uid !== g.uid));
+                              } else if (selectedParticipants.length < 6) {
+                                setSelectedParticipants(prev => [...prev, g.uid]);
+                              }
+                            }}
+                            className={`flex flex-col items-center gap-1 transition-all ${isSelected ? 'scale-105' : 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                          >
+                            <div className={`relative p-0.5 rounded-full border-2 transition-all ${isSelected ? 'border-emerald-500' : 'border-transparent'}`}>
+                              <img 
+                                src={g.photoURL} 
+                                alt={g.displayName} 
+                                className="w-12 h-12 rounded-full"
+                                referrerPolicy="no-referrer"
+                              />
+                              {isSelected && (
+                                <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
+                                  <Check size={10} strokeWidth={4} />
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                      {selectedParticipants.length < 6 && (
+                        <button
+                          onClick={handleAddGuest}
+                          className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-all"
+                          title="Add Guest"
+                        >
+                          <div className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-emerald-500 hover:text-emerald-500 transition-all">
+                            <UserPlus size={20} />
+                          </div>
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
