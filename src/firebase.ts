@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User, updateProfile } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp, Timestamp, updateDoc } from 'firebase/firestore';
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -72,6 +72,24 @@ export const signInWithGoogle = async () => {
     return user;
   } catch (error) {
     console.error("Error signing in with Google:", error);
+    throw error;
+  }
+};
+
+export const updateUserDisplayName = async (newName: string) => {
+  if (!auth.currentUser) throw new Error("No user logged in");
+  
+  try {
+    // 1. Update Firebase Auth profile
+    await updateProfile(auth.currentUser, { displayName: newName });
+    
+    // 2. Update Firestore user document
+    const userRef = doc(db, 'users', auth.currentUser.uid);
+    await updateDoc(userRef, {
+      displayName: newName,
+    });
+  } catch (error) {
+    console.error("Error updating display name:", error);
     throw error;
   }
 };

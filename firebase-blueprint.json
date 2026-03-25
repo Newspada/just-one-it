@@ -50,6 +50,19 @@
         "updatedAt": { "type": "string", "format": "date-time", "description": "When the status was last updated" }
       },
       "required": ["fromUid", "toUid", "status", "createdAt"]
+    },
+    "Invitation": {
+      "title": "Invitation",
+      "description": "Represents an invitation sent to an unregistered user",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email", "description": "Email address of the invited user" },
+        "invitedBy": { "type": "string", "description": "UID of the user who sent the invitation" },
+        "invitedByName": { "type": "string", "description": "Name of the user who sent the invitation" },
+        "status": { "type": "string", "enum": ["sent", "accepted"], "description": "Current status of the invitation" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the invitation was sent" }
+      },
+      "required": ["email", "invitedBy", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -64,6 +77,10 @@
     "/friendships/{friendshipId}": {
       "schema": "Friendship",
       "description": "Friendship and request records"
+    },
+    "/invitations/{invitationId}": {
+      "schema": "Invitation",
+      "description": "Invitations to unregistered users"
     }
   }
 }

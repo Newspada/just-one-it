@@ -3,6 +3,7 @@ import {
   query, 
   where, 
   getDocs, 
+  getDoc,
   addDoc, 
   updateDoc, 
   deleteDoc, 
@@ -38,6 +39,7 @@ const USERS_COLLECTION = 'users';
 export const sendFriendRequestByEmail = async (email: string) => {
   if (!auth.currentUser) throw new Error('User not authenticated');
   const currentUserUid = auth.currentUser.uid;
+  const currentUserName = auth.currentUser.displayName || 'A friend';
 
   if (email === auth.currentUser.email) {
     throw new Error("You cannot add yourself as a friend");
@@ -51,8 +53,25 @@ export const sendFriendRequestByEmail = async (email: string) => {
   );
   
   const userSnapshot = await getDocs(userQuery);
+  
   if (userSnapshot.empty) {
-    throw new Error('User not found');
+    // User not found - create an invitation
+    // In a real app, this would trigger a Cloud Function to send an email
+    await addDoc(collection(db, 'invitations'), {
+      email,
+      invitedBy: currentUserUid,
+      invitedByName: currentUserName,
+      status: 'sent',
+      createdAt: serverTimestamp()
+    });
+    
+    const mailtoUrl = `mailto:${email}?subject=Join me on this app!&body=Hi! I'm using this app and I'd love for you to join me. You can sign up here: ${window.location.origin}`;
+    
+    return { 
+      status: 'invited', 
+      message: `User not registered. Opening your email client to send an invitation to ${email}!`,
+      mailtoUrl 
+    };
   }
 
   const targetUser = userSnapshot.docs[0].data() as UserProfile;
@@ -83,6 +102,8 @@ export const sendFriendRequestByEmail = async (email: string) => {
     status: 'pending',
     createdAt: serverTimestamp()
   });
+
+  return { status: 'sent', message: 'Friend request sent!' };
 };
 
 export const acceptFriendRequest = async (requestId: string) => {
@@ -102,7 +123,11 @@ export const declineFriendRequest = async (requestId: string) => {
 };
 
 export const removeFriend = async (friendshipId: string) => {
-  await deleteDoc(doc(db, FRIENDSHIPS_COLLECTION, friendshipId));
+  try {
+    await deleteDoc(doc(db, FRIENDSHIPS_COLLECTION, friendshipId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, FRIENDSHIPS_COLLECTION);
+  }
 };
 
 export const subscribeToFriendships = (
@@ -140,4 +165,8 @@ export const subscribeToFriendships = (
 };
 
 // Helper to get user profile by UID
-import { getDoc } from 'firebase/firestore';
+export const getUserProfile = async (uid: string) => {
+  const profileRef = doc(db, USERS_COLLECTION, uid);
+  const profileSnap = await getDoc(profileRef);
+  return profileSnap.exists() ? profileSnap.data() as UserProfile : null;
+};

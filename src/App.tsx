@@ -4,10 +4,12 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users, Folder, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured } from './firebase';
+import { Filter } from 'bad-words';
+import { italianProfanities } from './lib/profanity';
+import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured, updateUserDisplayName } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, where, Timestamp, doc, getDoc } from 'firebase/firestore';
 import { STATIC_ITEMS } from './data/words_en';
@@ -34,6 +36,17 @@ const SOUNDS = {
   WIN_MID: 'https://assets.mixkit.co/active_storage/sfx/2010/2010-preview.mp3',
   WIN_LOW: 'https://assets.mixkit.co/active_storage/sfx/2043/2043-preview.mp3',
 };
+
+const GUEST_AVATARS = [
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Milo',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Luna',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Leo',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Maya',
+];
 
 // Types
 interface Item {
@@ -143,7 +156,14 @@ export default function App() {
   const [friendSuccess, setFriendSuccess] = useState<string | null>(null);
 
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
+  const [guests, setGuests] = useState<{uid: string, displayName: string, photoURL: string}[]>([]);
   const [friendshipsLoaded, setFriendshipsLoaded] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [friendshipToRemove, setFriendshipToRemove] = useState<FriendshipType | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [isUpdatingName, setIsUpdatingName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   // Auth listener
   useEffect(() => {
@@ -190,7 +210,14 @@ export default function App() {
       hasSavedSession.current = true;
       addDoc(collection(db, path), {
         userId: auth.currentUser.uid,
-        participants: selectedParticipants,
+        participants: [...selectedParticipants].sort((a, b) => {
+          const aIsFriend = friendships.some(f => f.friendProfile?.uid === a && f.status === 'accepted');
+          const bIsFriend = friendships.some(f => f.friendProfile?.uid === b && f.status === 'accepted');
+          if (aIsFriend && !bIsFriend) return -1;
+          if (!aIsFriend && bIsFriend) return 1;
+          return 0;
+        }),
+        guestInfo: guests.filter(g => selectedParticipants.includes(g.uid)),
         score: summaryData.total,
         correct: summaryData.correct,
         skipped: summaryData.skipped,
@@ -273,6 +300,7 @@ export default function App() {
     setShowSummary(false);
     setSelectedWordIndex(null);
     setSelectedParticipants([]);
+    setGuests([]);
     setTimeLeft(30 * 60);
     setIsTimerActive(false);
   }, []);
@@ -297,6 +325,23 @@ export default function App() {
   useEffect(() => {
     initializePool();
   }, [initializePool]);
+
+  const handleAddGuest = () => {
+    if (selectedParticipants.length >= 6) return;
+    setShowAvatarPicker(true);
+  };
+
+  const confirmAddGuest = (avatarUrl: string) => {
+    const guestId = `guest-${Date.now()}`;
+    const newGuest = {
+      uid: guestId,
+      displayName: `Guest ${guests.length + 1}`,
+      photoURL: avatarUrl
+    };
+    setGuests(prev => [...prev, newGuest]);
+    setSelectedParticipants(prev => [...prev, guestId]);
+    setShowAvatarPicker(false);
+  };
 
   const extractItem = () => {
     if (isLocked || pool.length === 0 || isAwaitingScore) return;
@@ -412,6 +457,42 @@ export default function App() {
     setIsAwaitingScore(false);
   };
 
+  const handleSaveName = async () => {
+    if (!newDisplayName.trim() || !user) return;
+    
+    // Profanity filter
+    const filter = new Filter();
+    filter.addWords(...italianProfanities);
+
+    if (filter.isProfane(newDisplayName)) {
+      setNameError('Name contains offensive language');
+      return;
+    }
+
+    setNameError(null);
+    setIsUpdatingName(true);
+    try {
+      await updateUserDisplayName(newDisplayName.trim());
+      setIsEditingName(false);
+      // Force refresh user state to show new name
+      if (auth.currentUser) {
+        setUser({ ...auth.currentUser } as User);
+      }
+    } catch (error) {
+      console.error("Failed to update name:", error);
+      setNameError('Error updating name');
+    } finally {
+      setIsUpdatingName(false);
+    }
+  };
+
+  const closeFriends = () => {
+    setShowFriends(false);
+    setFriendEmail('');
+    setFriendError(null);
+    setFriendSuccess(null);
+  };
+
   const closeSummary = () => {
     setShowSummary(false);
     setHistory([]);
@@ -421,6 +502,41 @@ export default function App() {
     setTimeLeft(30 * 60);
     setIsTimerActive(false);
   };
+
+  // PWA Back button handling: push state when a modal opens
+  const prevModals = useRef({
+    showSummary, showSettings, showHistory, showSessionDetail, showFriends, showAvatarPicker
+  });
+
+  useEffect(() => {
+    const current = {
+      showSummary, showSettings, showHistory, showSessionDetail, showFriends, showAvatarPicker
+    };
+
+    const opened = (Object.keys(current) as Array<keyof typeof current>).some(key => current[key] && !prevModals.current[key]);
+    
+    if (opened) {
+      window.history.pushState({ isModal: true }, '');
+    }
+
+    prevModals.current = current;
+  }, [showSummary, showSettings, showHistory, showSessionDetail, showFriends, showAvatarPicker]);
+
+  // Handle back button (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (showAvatarPicker) setShowAvatarPicker(false);
+      else if (friendshipToRemove) setFriendshipToRemove(null);
+      else if (showSessionDetail) setShowSessionDetail(false);
+      else if (showSummary) closeSummary();
+      else if (showHistory) setShowHistory(false);
+      else if (showFriends) closeFriends();
+      else if (showSettings) setShowSettings(false);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showSummary, showSettings, showHistory, showSessionDetail, showFriends, showAvatarPicker, closeSummary]);
 
   const toggleLock = () => {
     setIsLocked(!isLocked);
@@ -541,7 +657,14 @@ export default function App() {
               <div className="p-4 bg-slate-50 border-t border-slate-100">
                 {(() => {
                   const displayParticipants = Array.from(new Set([selectedSession.userId, ...(selectedSession.participants || [])]))
-                    .filter(uid => uid !== user?.uid);
+                    .filter(uid => uid !== user?.uid)
+                    .sort((a, b) => {
+                      const aIsFriend = friendships.some(f => f.friendProfile?.uid === a && f.status === 'accepted');
+                      const bIsFriend = friendships.some(f => f.friendProfile?.uid === b && f.status === 'accepted');
+                      if (aIsFriend && !bIsFriend) return -1;
+                      if (!aIsFriend && bIsFriend) return 1;
+                      return 0;
+                    });
                   
                   if (displayParticipants.length === 0) return null;
 
@@ -553,7 +676,8 @@ export default function App() {
                           <div className="flex -space-x-2">
                             {displayParticipants.map((uid: string, pIdx: number) => {
                               const friend = friendships.find(f => f.friendProfile?.uid === uid);
-                              const profile = friend?.friendProfile;
+                              const guest = selectedSession.guestInfo?.find((g: any) => g.uid === uid);
+                              const profile = friend?.friendProfile || guest;
                               const isOrganizer = uid === selectedSession.userId;
                               return (
                                 <div 
@@ -604,11 +728,15 @@ export default function App() {
       {/* Friends Modal */}
       <AnimatePresence>
         {showFriends && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={closeFriends}
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh]"
             >
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -631,11 +759,7 @@ export default function App() {
                             </div>
                           </div>
                           <button 
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to remove ${f.friendProfile?.displayName} from your friends?`)) {
-                                removeFriend(f.id);
-                              }
-                            }}
+                            onClick={() => setFriendshipToRemove(f)}
                             className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
                             title="Remove Friend"
                           >
@@ -732,15 +856,23 @@ export default function App() {
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                       <input 
                         type="email" 
-                        placeholder="Friend's email"
+                        placeholder="Invite a friend"
                         value={friendEmail}
-                        onChange={(e) => setFriendEmail(e.target.value)}
+                        onChange={(e) => {
+                          setFriendEmail(e.target.value);
+                          if (friendError) setFriendError(null);
+                        }}
                         className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 transition-all text-sm"
                       />
                     </div>
                     <button 
                       onClick={async () => {
                         if (!friendEmail) return;
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(friendEmail)) {
+                          setFriendError('Invalid email format');
+                          return;
+                        }
                         setFriendActionLoading(true);
                         setFriendError(null);
                         setFriendSuccess(null);
@@ -767,7 +899,7 @@ export default function App() {
 
               <div className="p-6 bg-slate-50 border-t border-slate-100">
                 <button
-                  onClick={() => setShowFriends(false)}
+                  onClick={closeFriends}
                   className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all active:scale-95"
                 >
                   Close
@@ -930,28 +1062,86 @@ export default function App() {
                 {/* Auth Section */}
                 {user ? (
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-1">
                       <img 
                         src={user.photoURL || ''} 
                         alt={user.displayName || 'User'} 
                         className="w-10 h-10 rounded-full border border-white shadow-sm"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-800 leading-none">{user.displayName}</span>
+                      <div className="flex flex-col flex-1">
+                        {isEditingName ? (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={newDisplayName}
+                                onChange={(e) => {
+                                  setNewDisplayName(e.target.value);
+                                  setNameError(null);
+                                }}
+                                className={`w-full px-2 py-1 text-sm font-bold bg-white border rounded-lg focus:outline-none ${nameError ? 'border-rose-500' : 'border-slate-200 focus:border-emerald-500'}`}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveName();
+                                  if (e.key === 'Escape') {
+                                    setIsEditingName(false);
+                                    setNameError(null);
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={handleSaveName}
+                                disabled={isUpdatingName || !newDisplayName.trim()}
+                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-50"
+                              >
+                                {isUpdatingName ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setIsEditingName(false);
+                                  setNameError(null);
+                                }}
+                                disabled={isUpdatingName}
+                                className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                            {nameError && (
+                              <span className="text-[10px] text-rose-500 font-medium px-1">{nameError}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 group">
+                            <span className="text-sm font-bold text-slate-800 leading-none">{user.displayName}</span>
+                            <button
+                              onClick={() => {
+                                setNewDisplayName(user.displayName || '');
+                                setIsEditingName(true);
+                              }}
+                              className="p-1 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                              title="Edit Name"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                          </div>
+                        )}
                         <span className="text-[10px] text-slate-400">{user.email}</span>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => {
-                        logout();
-                        setShowSettings(false);
-                      }}
-                      className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
-                      title="Logout"
-                    >
-                      <LogOut size={20} />
-                    </button>
+                    {!isEditingName && (
+                      <button 
+                        onClick={() => {
+                          logout();
+                          setShowSettings(false);
+                        }}
+                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all ml-2"
+                        title="Logout"
+                      >
+                        <LogOut size={20} />
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <button 
@@ -1094,6 +1284,95 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Remove Friend Confirmation Modal */}
+      <AnimatePresence>
+        {friendshipToRemove && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6"
+            >
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+                  <UserX size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">Remove Friend?</h2>
+                <p className="text-slate-500">
+                  Are you sure you want to remove <strong>{friendshipToRemove.friendProfile?.displayName}</strong> from your friends?
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFriendshipToRemove(null)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    removeFriend(friendshipToRemove.id);
+                    setFriendshipToRemove(null);
+                  }}
+                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-rose-200"
+                >
+                  Remove
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Avatar Picker Modal */}
+      <AnimatePresence>
+        {showAvatarPicker && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-slate-800">Choose Avatar</h2>
+                <button onClick={() => setShowAvatarPicker(false)} className="p-2 text-slate-400 hover:text-slate-600">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-4">
+                {GUEST_AVATARS.map((avatar, idx) => {
+                  const isTaken = (user?.photoURL === avatar) || guests.some(g => g.photoURL === avatar);
+                  return (
+                    <button
+                      key={idx}
+                      disabled={isTaken}
+                      onClick={() => confirmAddGuest(avatar)}
+                      className={`relative group transition-all ${isTaken ? 'opacity-20 cursor-not-allowed' : 'active:scale-90'}`}
+                    >
+                      <img 
+                        src={avatar} 
+                        alt={`Avatar ${idx}`} 
+                        className={`w-full aspect-square rounded-full border-2 transition-all ${isTaken ? 'border-transparent' : 'border-transparent group-hover:border-emerald-500'}`}
+                        referrerPolicy="no-referrer"
+                      />
+                      {isTaken && (
+                        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                          <X size={16} strokeWidth={3} />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Summary Modal */}
       <AnimatePresence>
         {showSummary && (
@@ -1198,7 +1477,7 @@ export default function App() {
                     className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-all text-white"
                     title="History"
                   >
-                    <BarChart3 size={20} />
+                    <Trophy size={20} />
                   </button>
                 </>
               )}
@@ -1323,7 +1602,7 @@ export default function App() {
                   <p className="text-lg font-medium">Tap the button to start a new game</p>
                 </div>
 
-                {user && friendships.filter(f => f.status === 'accepted').length > 0 && (
+                {user && (
                   <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-bold text-slate-800">Participants</h3>
@@ -1332,6 +1611,21 @@ export default function App() {
                       </span>
                     </div>
                     <div className="grid grid-cols-4 gap-3">
+                      {/* Current User (Always selected) */}
+                      <div className="flex flex-col items-center gap-1 transition-all scale-105">
+                        <div className="relative p-0.5 rounded-full border-2 border-emerald-500 transition-all">
+                          <img 
+                            src={user.photoURL || ''} 
+                            alt={user.displayName || 'Me'} 
+                            className="w-12 h-12 rounded-full"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
+                            <Check size={10} strokeWidth={4} />
+                          </div>
+                        </div>
+                      </div>
+
                       {friendships.filter(f => f.status === 'accepted').map(f => {
                         const isSelected = selectedParticipants.includes(f.friendProfile?.uid || '');
                         return (
@@ -1364,6 +1658,48 @@ export default function App() {
                           </button>
                         );
                       })}
+                      {guests.map(g => {
+                        const isSelected = selectedParticipants.includes(g.uid);
+                        return (
+                          <button
+                            key={g.uid}
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedParticipants(prev => prev.filter(id => id !== g.uid));
+                                setGuests(prev => prev.filter(guest => guest.uid !== g.uid));
+                              } else if (selectedParticipants.length < 6) {
+                                setSelectedParticipants(prev => [...prev, g.uid]);
+                              }
+                            }}
+                            className={`flex flex-col items-center gap-1 transition-all ${isSelected ? 'scale-105' : 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0'}`}
+                          >
+                            <div className={`relative p-0.5 rounded-full border-2 transition-all ${isSelected ? 'border-emerald-500' : 'border-transparent'}`}>
+                              <img 
+                                src={g.photoURL} 
+                                alt={g.displayName} 
+                                className="w-12 h-12 rounded-full"
+                                referrerPolicy="no-referrer"
+                              />
+                              {isSelected && (
+                                <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
+                                  <Check size={10} strokeWidth={4} />
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                      {selectedParticipants.length < 6 && (
+                        <button
+                          onClick={handleAddGuest}
+                          className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-all"
+                          title="Add Guest"
+                        >
+                          <div className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-emerald-500 hover:text-emerald-500 transition-all">
+                            <UserPlus size={20} />
+                          </div>
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
