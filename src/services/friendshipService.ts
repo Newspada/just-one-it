@@ -3,6 +3,7 @@ import {
   query, 
   where, 
   getDocs, 
+  getDoc,
   addDoc, 
   updateDoc, 
   deleteDoc, 
@@ -102,7 +103,11 @@ export const declineFriendRequest = async (requestId: string) => {
 };
 
 export const removeFriend = async (friendshipId: string) => {
-  await deleteDoc(doc(db, FRIENDSHIPS_COLLECTION, friendshipId));
+  try {
+    await deleteDoc(doc(db, FRIENDSHIPS_COLLECTION, friendshipId));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, FRIENDSHIPS_COLLECTION);
+  }
 };
 
 export const subscribeToFriendships = (
@@ -140,4 +145,8 @@ export const subscribeToFriendships = (
 };
 
 // Helper to get user profile by UID
-import { getDoc } from 'firebase/firestore';
+export const getUserProfile = async (uid: string) => {
+  const profileRef = doc(db, USERS_COLLECTION, uid);
+  const profileSnap = await getDoc(profileRef);
+  return profileSnap.exists() ? profileSnap.data() as UserProfile : null;
+};

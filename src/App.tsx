@@ -157,6 +157,7 @@ export default function App() {
   const [guests, setGuests] = useState<{uid: string, displayName: string, photoURL: string}[]>([]);
   const [friendshipsLoaded, setFriendshipsLoaded] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [friendshipToRemove, setFriendshipToRemove] = useState<FriendshipType | null>(null);
 
   // Auth listener
   useEffect(() => {
@@ -450,6 +451,13 @@ export default function App() {
     setIsAwaitingScore(false);
   };
 
+  const closeFriends = () => {
+    setShowFriends(false);
+    setFriendEmail('');
+    setFriendError(null);
+    setFriendSuccess(null);
+  };
+
   const closeSummary = () => {
     setShowSummary(false);
     setHistory([]);
@@ -483,10 +491,11 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       if (showAvatarPicker) setShowAvatarPicker(false);
+      else if (friendshipToRemove) setFriendshipToRemove(null);
       else if (showSessionDetail) setShowSessionDetail(false);
       else if (showSummary) closeSummary();
       else if (showHistory) setShowHistory(false);
-      else if (showFriends) setShowFriends(false);
+      else if (showFriends) closeFriends();
       else if (showSettings) setShowSettings(false);
     };
 
@@ -684,11 +693,15 @@ export default function App() {
       {/* Friends Modal */}
       <AnimatePresence>
         {showFriends && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={closeFriends}
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh]"
             >
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -711,11 +724,7 @@ export default function App() {
                             </div>
                           </div>
                           <button 
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to remove ${f.friendProfile?.displayName} from your friends?`)) {
-                                removeFriend(f.id);
-                              }
-                            }}
+                            onClick={() => setFriendshipToRemove(f)}
                             className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
                             title="Remove Friend"
                           >
@@ -847,7 +856,7 @@ export default function App() {
 
               <div className="p-6 bg-slate-50 border-t border-slate-100">
                 <button
-                  onClick={() => setShowFriends(false)}
+                  onClick={closeFriends}
                   className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all active:scale-95"
                 >
                   Close
@@ -1167,6 +1176,48 @@ export default function App() {
                   className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all"
                 >
                   Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Remove Friend Confirmation Modal */}
+      <AnimatePresence>
+        {friendshipToRemove && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6"
+            >
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+                  <UserX size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">Remove Friend?</h2>
+                <p className="text-slate-500">
+                  Are you sure you want to remove <strong>{friendshipToRemove.friendProfile?.displayName}</strong> from your friends?
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setFriendshipToRemove(null)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    removeFriend(friendshipToRemove.id);
+                    setFriendshipToRemove(null);
+                  }}
+                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-rose-200"
+                >
+                  Remove
                 </button>
               </div>
             </motion.div>
