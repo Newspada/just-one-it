@@ -656,7 +656,7 @@ export default function App() {
       {/* Players List Modal */}
       <AnimatePresence>
         {showPlayersList && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowPlayersList(false)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={() => setShowPlayersList(false)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -840,7 +840,7 @@ export default function App() {
       {/* Description Modal */}
       <AnimatePresence>
         {showDescription && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowDescription(false)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={() => setShowDescription(false)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -851,20 +851,17 @@ export default function App() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-emerald-600">
                   <Sparkles size={24} />
-                  <h2 className="text-xl font-bold">About</h2>
+                  <h2 className="text-xl font-bold">About Just One!™</h2>
                 </div>
-                <button onClick={() => setShowDescription(false)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                  <X size={24} />
-                </button>
               </div>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                 A collaborative word-guessing game where players draw from a pool of 110 bilingual cards. Challenge friends, track session history, and aim for a perfect score with immersive sound effects and real-time stats.
               </p>
               <button
                 onClick={() => setShowDescription(false)}
-                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-emerald-100"
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all active:scale-95"
               >
-                Got it
+                Got it!
               </button>
             </motion.div>
           </div>
@@ -874,7 +871,7 @@ export default function App() {
       {/* Session Detail Modal */}
       <AnimatePresence>
         {showSessionDetail && selectedSession && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1018,7 +1015,7 @@ export default function App() {
       <AnimatePresence>
         {showFriends && (
           <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
             onClick={closeFriends}
           >
             <motion.div
@@ -1202,7 +1199,7 @@ export default function App() {
       {/* History Modal */}
       <AnimatePresence>
         {showHistory && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1337,7 +1334,7 @@ export default function App() {
       {/* Settings Modal */}
       <AnimatePresence>
         {showSettings && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1459,27 +1456,6 @@ export default function App() {
                   </button>
                 )}
 
-                {/* Language Settings */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Language</h3>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => setLanguage('it')}
-                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'it' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
-                    >
-                      <span className="text-3xl">🇮🇹</span>
-                      <span className="font-bold">Italiano</span>
-                    </button>
-                    <button 
-                      onClick={() => setLanguage('en')}
-                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'en' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
-                    >
-                      <span className="text-3xl">🇬🇧</span>
-                      <span className="font-bold">English</span>
-                    </button>
-                  </div>
-                </div>
-
                 {/* Appearance Settings */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Appearance</h3>
@@ -1503,35 +1479,44 @@ export default function App() {
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Gameplay</h3>
                   <div className="space-y-2">
-                    <button 
-                      onClick={() => setAutoHighlight(!autoHighlight)}
-                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoHighlight ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
-                    >
-                      <div className="flex items-center gap-3">
+                    <div className="flex gap-2 mb-2">
+                      <button 
+                        onClick={() => setLanguage('it')}
+                        className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'it' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
+                      >
+                        <span className="text-3xl">🇮🇹</span>
+                        <span className="font-bold">Italiano</span>
+                      </button>
+                      <button 
+                        onClick={() => setLanguage('en')}
+                        className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'en' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
+                      >
+                        <span className="text-3xl">🇬🇧</span>
+                        <span className="font-bold">English</span>
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => setAutoHighlight(!autoHighlight)}
+                        className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${autoHighlight ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
+                      >
                         <div className={`p-2 rounded-lg ${autoHighlight ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           <Sparkles size={18} />
                         </div>
-                        <span className="font-bold">Auto-Highlight</span>
-                      </div>
-                      <div className={`w-10 h-6 rounded-full relative transition-colors ${autoHighlight ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoHighlight ? 'left-5' : 'left-1'}`} />
-                      </div>
-                    </button>
+                        <span className="font-bold text-sm">Auto-Highlight</span>
+                      </button>
 
-                    <button 
-                      onClick={() => setAutoLock(!autoLock)}
-                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoLock ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
-                    >
-                      <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setAutoLock(!autoLock)}
+                        className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${autoLock ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
+                      >
                         <div className={`p-2 rounded-lg ${autoLock ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           <Lock size={18} />
                         </div>
-                        <span className="font-bold">Auto-Lock</span>
-                      </div>
-                      <div className={`w-10 h-6 rounded-full relative transition-colors ${autoLock ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoLock ? 'left-5' : 'left-1'}`} />
-                      </div>
-                    </button>
+                        <span className="font-bold text-sm">Auto-Lock</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1541,7 +1526,7 @@ export default function App() {
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors duration-500">
                     <button 
                       onClick={() => setSoundEnabled(!soundEnabled)}
-                      className={`p-3 rounded-xl transition-all active:scale-90 ${soundEnabled ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}
+                      className={`p-3 rounded-xl transition-all active:scale-90 ${soundEnabled ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}
                       title={soundEnabled ? "Mute" : "Unmute"}
                     >
                       {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
@@ -1576,16 +1561,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Stats */}
-                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                    <div className="flex items-center gap-2">
-                      <Layers size={16} />
-                      <span className="text-sm font-bold">Total Revealed Cards</span>
-                    </div>
-                    <span className="text-sm font-black text-slate-800 dark:text-slate-200">{revealedCount} / {STATIC_ITEMS.length}</span>
-                  </div>
-                </div>
 
                 <button
                   onClick={() => setShowSettings(false)}
@@ -1602,7 +1577,7 @@ export default function App() {
       {/* Remove Friend Confirmation Modal */}
       <AnimatePresence>
         {friendshipToRemove && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1644,7 +1619,7 @@ export default function App() {
       {/* Avatar Picker Modal */}
       <AnimatePresence>
         {showAvatarPicker && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1691,7 +1666,7 @@ export default function App() {
       {/* Summary Modal */}
       <AnimatePresence>
         {showSummary && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1833,7 +1808,7 @@ export default function App() {
                 dragConstraints={{ left: 0, right: 0 }}
                 onDragEnd={handleDragEnd}
                 className={`w-full max-w-md min-h-[350px] border-2 rounded-2xl shadow-xl flex flex-col items-center justify-center p-6 text-center gap-2 sm:gap-3 transition-all duration-300 cursor-grab active:cursor-grabbing relative m-1 ${
-                  isBlurred ? 'blur-md select-none' : ''
+                  isBlurred ? 'blur-2xl select-none' : ''
                 } ${
                   viewingIndex === 0 
                     ? 'bg-white dark:bg-slate-800 border-emerald-100 dark:border-emerald-900/50' 
