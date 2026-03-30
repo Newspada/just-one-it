@@ -151,6 +151,8 @@ export default function App() {
   const [selectedSession, setSelectedSession] = useState<any | null>(null);
   const [showSessionDetail, setShowSessionDetail] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
   const hasSavedSession = useRef(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -174,6 +176,24 @@ export default function App() {
   const [editingGuestUid, setEditingGuestUid] = useState<string | null>(null);
   const [editingGuestName, setEditingGuestName] = useState('');
   const [guestNameError, setGuestNameError] = useState<string | null>(null);
+
+  const handlePlayerInteraction = (profile: any) => {
+    if (!profile) return;
+    setSelectedProfile(profile);
+    setShowProfilePopup(true);
+  };
+
+  const startLongPress = (profile: any) => {
+    longPressTimer.current = setTimeout(() => {
+      handlePlayerInteraction(profile);
+    }, 600);
+  };
+
+  const endLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
 
   const handleSaveGuestName = (uid: string) => {
     if (!editingGuestName.trim()) {
@@ -653,6 +673,108 @@ export default function App() {
           <span>Firebase not configured. Please set the required secrets in Settings.</span>
         </div>
       )}
+      {/* Player Profile Popup */}
+      <AnimatePresence>
+        {showProfilePopup && selectedProfile && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowProfilePopup(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-[280px] overflow-hidden p-6 flex flex-col items-center text-center gap-4 transition-colors duration-500 border border-slate-100 dark:border-slate-800"
+            >
+              <div className="relative">
+                <img 
+                  src={selectedProfile.photoURL || ''} 
+                  alt={selectedProfile.displayName} 
+                  className="w-24 h-24 rounded-full shadow-lg"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="space-y-1 w-full">
+                {editingGuestUid === selectedProfile.uid ? (
+                  <div className="flex flex-col gap-1 w-full">
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editingGuestName}
+                        onChange={(e) => {
+                          setEditingGuestName(e.target.value);
+                          if (guestNameError) setGuestNameError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveGuestName(selectedProfile.uid);
+                            // Update the local selectedProfile display name
+                            setSelectedProfile((prev: any) => ({ ...prev, displayName: editingGuestName.trim() }));
+                          } else if (e.key === 'Escape') {
+                            setEditingGuestUid(null);
+                            setGuestNameError(null);
+                          }
+                        }}
+                        className={`flex-1 bg-white dark:bg-slate-900 border rounded-lg px-2 py-1 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none text-center ${guestNameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
+                      />
+                      <button
+                        onClick={() => {
+                          handleSaveGuestName(selectedProfile.uid);
+                          setSelectedProfile((prev: any) => ({ ...prev, displayName: editingGuestName.trim() }));
+                        }}
+                        disabled={!editingGuestName.trim()}
+                        className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-all disabled:opacity-50 flex-shrink-0"
+                        title="Save"
+                      >
+                        <Check size={18} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingGuestUid(null);
+                          setGuestNameError(null);
+                        }}
+                        className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all flex-shrink-0"
+                        title="Cancel"
+                      >
+                        <XCircle size={18} />
+                      </button>
+                    </div>
+                    {guestNameError && (
+                      <span className="text-[10px] text-rose-500 font-medium">{guestNameError}</span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2 group/name">
+                    <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">{selectedProfile.displayName}</h3>
+                    {guests.some(g => g.uid === selectedProfile.uid) && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingGuestUid(selectedProfile.uid);
+                          setEditingGuestName(selectedProfile.displayName || '');
+                          setGuestNameError(null);
+                        }}
+                        className="p-1 text-emerald-500 hover:text-emerald-600 transition-all"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {selectedProfile.email && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{selectedProfile.email}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setShowProfilePopup(false)}
+                className="mt-2 w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-bold transition-all active:scale-95"
+              >
+                Got it!
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Players List Modal */}
       <AnimatePresence>
         {showPlayersList && (
@@ -699,7 +821,15 @@ export default function App() {
                       const profile = isMe ? user : (friend || guest);
                       
                       return (
-                        <div key={uid} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div 
+                          key={uid} 
+                          className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          onMouseDown={() => startLongPress(profile)}
+                          onMouseUp={endLongPress}
+                          onMouseLeave={endLongPress}
+                          onTouchStart={() => startLongPress(profile)}
+                          onTouchEnd={endLongPress}
+                        >
                           {profile?.photoURL ? (
                             <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
                           ) : (
@@ -736,7 +866,15 @@ export default function App() {
                       const profile = isMe ? user : (friend || guest);
                       
                       return (
-                        <div key={uid} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div 
+                          key={uid} 
+                          className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          onMouseDown={() => startLongPress(profile)}
+                          onMouseUp={endLongPress}
+                          onMouseLeave={endLongPress}
+                          onTouchStart={() => startLongPress(profile)}
+                          onTouchEnd={endLongPress}
+                        >
                           {profile?.photoURL ? (
                             <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
                           ) : (
@@ -965,8 +1103,13 @@ export default function App() {
                               return (
                                 <div 
                                   key={pIdx} 
-                                  className={`w-6 h-6 rounded-full border-2 ${isOrganizer ? 'border-emerald-500' : 'border-white dark:border-slate-800'} bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden shadow-sm transition-colors duration-500`} 
+                                  className={`w-6 h-6 rounded-full border-2 ${isOrganizer ? 'border-emerald-500' : 'border-white dark:border-slate-800 cursor-pointer'} bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden shadow-sm transition-colors duration-500`} 
                                   title={`${profile?.displayName || 'Friend'}${isOrganizer ? ' (Organizer)' : ''}`}
+                                  onMouseDown={() => !isOrganizer && startLongPress(profile)}
+                                  onMouseUp={endLongPress}
+                                  onMouseLeave={endLongPress}
+                                  onTouchStart={() => !isOrganizer && startLongPress(profile)}
+                                  onTouchEnd={endLongPress}
                                 >
                                   {profile?.photoURL ? (
                                     <img src={profile.photoURL} alt={profile.displayName || 'Friend'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -1891,7 +2034,6 @@ export default function App() {
                 <div className="text-slate-400 dark:text-slate-500 text-center mb-8">
                   <div
                     className="cursor-help select-none inline-block"
-                    onDoubleClick={handleIconDoubleClick}
                     onMouseDown={handleIconTouchStart}
                     onMouseUp={handleIconTouchEnd}
                     onMouseLeave={handleIconTouchEnd}
@@ -1946,6 +2088,11 @@ export default function App() {
                                 setSelectedParticipants(prev => [...prev, uid]);
                               }
                             }}
+                            onMouseDown={() => startLongPress(f.friendProfile)}
+                            onMouseUp={endLongPress}
+                            onMouseLeave={endLongPress}
+                            onTouchStart={() => startLongPress(f.friendProfile)}
+                            onTouchEnd={endLongPress}
                             className={`flex flex-col items-center gap-1 transition-all ${isSelected ? 'scale-105' : 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0'}`}
                           >
                             <div className={`relative p-0.5 rounded-full border-2 transition-all ${isSelected ? 'border-emerald-500' : 'border-transparent'}`}>
@@ -1977,6 +2124,11 @@ export default function App() {
                                 setSelectedParticipants(prev => [...prev, g.uid]);
                               }
                             }}
+                            onMouseDown={() => startLongPress(g)}
+                            onMouseUp={endLongPress}
+                            onMouseLeave={endLongPress}
+                            onTouchStart={() => startLongPress(g)}
+                            onTouchEnd={endLongPress}
                             className={`flex flex-col items-center gap-1 transition-all ${isSelected ? 'scale-105' : 'opacity-60 grayscale hover:opacity-100 hover:grayscale-0'}`}
                           >
                             <div className={`relative p-0.5 rounded-full border-2 transition-all ${isSelected ? 'border-emerald-500' : 'border-transparent'}`}>
