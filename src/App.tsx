@@ -8,6 +8,7 @@ import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCi
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Filter } from 'bad-words';
+import imageCompression from 'browser-image-compression';
 import { italianProfanities } from './lib/profanity';
 import { auth, db, signInWithGoogle, logout, OperationType, handleFirestoreError, isFirebaseConfigured, updateUserDisplayName } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -164,28 +165,38 @@ export default function App() {
     const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
 
     if (file && (selectedProfile || isAddingGuestFromCamera)) {
-      if (!apiKey) {
-        console.error('ImgBB API key is missing. Please add VITE_IMGBB_API_KEY to your .env file.');
-        // Fallback to base64 if no API key is provided for demo purposes
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result as string;
-          if (isAddingGuestFromCamera) {
-            confirmAddGuest(base64String);
-            setIsAddingGuestFromCamera(false);
-          } else if (selectedProfile) {
-            setGuests(prev => prev.map(g => g.uid === selectedProfile.uid ? { ...g, photoURL: base64String } : g));
-            setSelectedProfile(prev => prev ? { ...prev, photoURL: base64String } : null);
-          }
-        };
-        reader.readAsDataURL(file);
-        return;
-      }
-
       setIsUploadingImage(true);
+      
       try {
+        // Image Compression
+        const options = {
+          maxSizeMB: 0.1, // Reduced from 0.5 to 0.1 for higher compression
+          maxWidthOrHeight: 512, // Reduced from 1024 to 512 for smaller dimensions
+          useWebWorker: true
+        };
+        
+        const compressedFile = await imageCompression(file, options);
+
+        if (!apiKey) {
+          console.error('ImgBB API key is missing. Please add VITE_IMGBB_API_KEY to your .env file.');
+          // Fallback to base64 if no API key is provided for demo purposes
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64String = reader.result as string;
+            if (isAddingGuestFromCamera) {
+              confirmAddGuest(base64String);
+              setIsAddingGuestFromCamera(false);
+            } else if (selectedProfile) {
+              setGuests(prev => prev.map(g => g.uid === selectedProfile.uid ? { ...g, photoURL: base64String } : g));
+              setSelectedProfile(prev => prev ? { ...prev, photoURL: base64String } : null);
+            }
+          };
+          reader.readAsDataURL(compressedFile);
+          return;
+        }
+
         const formData = new FormData();
-        formData.append('image', file);
+        formData.append('image', compressedFile);
         
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
           method: 'POST',
@@ -206,7 +217,7 @@ export default function App() {
           throw new Error(data.error?.message || 'Upload failed');
         }
       } catch (error) {
-        console.error('Image upload failed:', error);
+        console.error('Image processing or upload failed:', error);
       } finally {
         setIsUploadingImage(false);
       }
@@ -2423,6 +2434,29 @@ export default function App() {
         capture="user" 
         className="hidden" 
       />
+
+      {/* Global Image Upload Spinner */}
+      <AnimatePresence>
+        {isUploadingImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+          >
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-4 transition-colors duration-500">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                <Camera className="absolute inset-0 m-auto text-emerald-500" size={24} />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-slate-800 dark:text-slate-100">Processing Image...</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Optimizing and uploading</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
