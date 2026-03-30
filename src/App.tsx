@@ -1923,7 +1923,7 @@ export default function App() {
                     onTouchStart={handleIconTouchStart}
                     onTouchEnd={handleIconTouchEnd}
                   >
-                    <Layers size={64} className="mx-auto mb-4 opacity-20" />
+                    <Layers size={64} className="mx-auto mb-2 opacity-20" />
                   </div>
                   <p className="text-lg font-medium text-slate-600 dark:text-slate-400">Tap the button to start a new game</p>
                 </div>
