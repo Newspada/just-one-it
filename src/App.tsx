@@ -128,6 +128,7 @@ export default function App() {
     return saved !== null ? JSON.parse(saved) : true;
   });
   const [showSettings, setShowSettings] = useState(false);
+  const [showPlayersList, setShowPlayersList] = useState(false);
   const [viewingIndex, setViewingIndex] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem('soundEnabled');
@@ -170,6 +171,30 @@ export default function App() {
   const [newDisplayName, setNewDisplayName] = useState('');
   const [isUpdatingName, setIsUpdatingName] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [editingGuestUid, setEditingGuestUid] = useState<string | null>(null);
+  const [editingGuestName, setEditingGuestName] = useState('');
+  const [guestNameError, setGuestNameError] = useState<string | null>(null);
+
+  const handleSaveGuestName = (uid: string) => {
+    if (!editingGuestName.trim()) {
+      setEditingGuestUid(null);
+      setGuestNameError(null);
+      return;
+    }
+
+    // Profanity filter
+    const filter = new Filter();
+    filter.addWords(...italianProfanities);
+
+    if (filter.isProfane(editingGuestName)) {
+      setGuestNameError('Name contains offensive language');
+      return;
+    }
+
+    setGuestNameError(null);
+    setGuests(prev => prev.map(g => g.uid === uid ? { ...g, displayName: editingGuestName.trim() } : g));
+    setEditingGuestUid(null);
+  };
 
   // Auth listener
   useEffect(() => {
@@ -542,10 +567,16 @@ export default function App() {
     const handlePopState = () => {
       if (showAvatarPicker) setShowAvatarPicker(false);
       else if (friendshipToRemove) setFriendshipToRemove(null);
-      else if (showSessionDetail) setShowSessionDetail(false);
+      else if (showSessionDetail) {
+        setShowSessionDetail(false);
+        setSelectedSession(null);
+      }
       else if (showDescription) setShowDescription(false);
       else if (showSummary) closeSummary();
-      else if (showHistory) setShowHistory(false);
+      else if (showHistory) {
+        setShowHistory(false);
+        setSelectedSession(null);
+      }
       else if (showFriends) closeFriends();
       else if (showSettings) setShowSettings(false);
     };
@@ -622,6 +653,182 @@ export default function App() {
           <span>Firebase not configured. Please set the required secrets in Settings.</span>
         </div>
       )}
+      {/* Players List Modal */}
+      <AnimatePresence>
+        {showPlayersList && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowPlayersList(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[70vh] transition-colors duration-500"
+            >
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {selectedSession ? (
+                  <>
+                    {/* Organizer of the past session */}
+                    {(() => {
+                      const isMe = selectedSession.userId === user?.uid;
+                      const profile = isMe ? user : friendships.find(f => f.friendProfile?.uid === selectedSession.userId)?.friendProfile;
+                      
+                      return (
+                        <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
+                          {profile?.photoURL ? (
+                            <img src={profile.photoURL} alt={profile.displayName || 'Organizer'} className="w-10 h-10 rounded-full border-2 border-emerald-500" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center border-2 border-emerald-500">
+                              <UserIcon size={20} className="text-slate-400" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || 'Organizer'}</p>
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Organizer</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Other participants of the past session */}
+                    {(selectedSession.participants || []).filter((uid: string) => uid !== selectedSession.userId).map((uid: string) => {
+                      const friend = friendships.find(f => f.friendProfile?.uid === uid)?.friendProfile;
+                      const guest = selectedSession.guestInfo?.find((g: any) => g.uid === uid);
+                      const profile = friend || guest;
+                      
+                      return (
+                        <div key={uid} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                          {profile?.photoURL ? (
+                            <img src={profile.photoURL} alt={profile.displayName || 'Player'} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                              <UserIcon size={20} className="text-slate-400" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || 'Unknown Player'}</p>
+                            <p className="text-xs text-slate-400 font-medium">{guest ? 'Guest' : 'Friend'}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <>
+                    {/* Me (Current Setup) */}
+                    <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
+                      <img src={user?.photoURL || ''} alt="Me" className="w-10 h-10 rounded-full border-2 border-emerald-500" referrerPolicy="no-referrer" />
+                      <div className="flex-1">
+                        <p className="font-bold text-slate-800 dark:text-slate-100">{user?.displayName}</p>
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Organizer</p>
+                      </div>
+                    </div>
+
+                    {/* Selected Friends & Guests (Current Setup) */}
+                    {selectedParticipants.map(uid => {
+                      const friend = friendships.find(f => f.friendProfile?.uid === uid)?.friendProfile;
+                      const guest = guests.find(g => g.uid === uid);
+                      const profile = friend || guest;
+                      
+                      return (
+                        <div key={uid} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                          {profile?.photoURL ? (
+                            <img src={profile.photoURL} alt={profile.displayName} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                              <UserIcon size={20} className="text-slate-400" />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            {editingGuestUid === uid ? (
+                              <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    autoFocus
+                                    type="text"
+                                    value={editingGuestName}
+                                    onChange={(e) => {
+                                      setEditingGuestName(e.target.value);
+                                      if (guestNameError) setGuestNameError(null);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleSaveGuestName(uid);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingGuestUid(null);
+                                        setGuestNameError(null);
+                                      }
+                                    }}
+                                    className={`flex-1 bg-white dark:bg-slate-900 border rounded-lg px-2 py-1 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none ${guestNameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
+                                  />
+                                  <button
+                                    onClick={() => handleSaveGuestName(uid)}
+                                    disabled={!editingGuestName.trim()}
+                                    className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-all disabled:opacity-50"
+                                    title="Save"
+                                  >
+                                    <Check size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingGuestUid(null);
+                                      setGuestNameError(null);
+                                    }}
+                                    className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                                    title="Cancel"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
+                                {guestNameError && (
+                                  <span className="text-[10px] text-rose-500 font-medium px-1">{guestNameError}</span>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 group/name">
+                                <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || 'Unknown Player'}</p>
+                                {guest && (
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingGuestUid(uid);
+                                      setEditingGuestName(profile?.displayName || '');
+                                      setGuestNameError(null);
+                                    }}
+                                    className="p-1 text-slate-400 hover:text-emerald-500 opacity-0 group-hover/name:opacity-100 transition-all"
+                                  >
+                                    <Edit2 size={12} />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                            <p className="text-xs text-slate-400 font-medium">{guest ? 'Guest' : 'Friend'}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {selectedParticipants.length === 0 && (
+                      <div className="py-8 text-center">
+                        <p className="text-slate-400 text-sm">No other players selected yet.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => setShowPlayersList(false)}
+                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-100 dark:shadow-none"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Description Modal */}
       <AnimatePresence>
         {showDescription && (
@@ -739,7 +946,10 @@ export default function App() {
                   return (
                     <div className="grid grid-cols-3 gap-2 mb-3">
                       <div className="col-start-3 flex justify-end">
-                        <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-500">
+                        <button 
+                          onClick={() => setShowPlayersList(true)}
+                          className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-500 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95"
+                        >
                           <span className="text-[9px] font-black text-slate-400 uppercase mr-0.5">With</span>
                           <div className="flex -space-x-2">
                             {displayParticipants.map((uid: string, pIdx: number) => {
@@ -762,7 +972,7 @@ export default function App() {
                               );
                             })}
                           </div>
-                        </div>
+                        </button>
                       </div>
                     </div>
                   );
@@ -782,7 +992,10 @@ export default function App() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowSessionDetail(false)}
+                  onClick={() => {
+                    setShowSessionDetail(false);
+                    setSelectedSession(null);
+                  }}
                   className="w-full py-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white rounded-2xl font-bold transition-all active:scale-95"
                 >
                   Back
@@ -1099,7 +1312,10 @@ export default function App() {
 
               <div className="p-4 border-t border-slate-100 dark:border-slate-800">
                 <button
-                  onClick={() => setShowHistory(false)}
+                  onClick={() => {
+                    setShowHistory(false);
+                    setSelectedSession(null);
+                  }}
                   className="w-full py-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white rounded-2xl font-bold transition-all active:scale-95"
                 >
                   Close
@@ -1706,11 +1922,16 @@ export default function App() {
 
                 {user && (
                   <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 transition-colors duration-500">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Participants</h3>
-                      <span className="text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg">
+                    <div 
+                      className="flex items-center justify-between cursor-pointer group"
+                      onClick={() => setShowPlayersList(true)}
+                    >
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-500 transition-colors">Participants</h3>
+                      <button 
+                        className="text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors active:scale-95"
+                      >
                         {selectedParticipants.length + 1} / 7
-                      </span>
+                      </button>
                     </div>
                     <div className="grid grid-cols-4 gap-3">
                       {/* Current User (Always selected) */}
