@@ -17,6 +17,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "bad-words": "^4.0.0",
     "better-sqlite3": "^12.4.1",
+    "browser-image-compression": "^2.0.2",
     "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
