@@ -1,5 +1,5 @@
 {
   "name": "Just One",
-  "description": "An app that extracts 5-word items from a pool of 110, with automatic reshuffling after 50 reveals and a safety lock.",
+  "description": "A collaborative word-guessing game where players draw from a pool of 110 bilingual cards. Challenge friends, track session history, and aim for a perfect score with immersive sound effects and real-time stats.",
   "requestFramePermissions": []
 }

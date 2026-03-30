@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users, Folder, Edit2 } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users, Folder, Edit2, Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Filter } from 'bad-words';
@@ -137,6 +137,10 @@ export default function App() {
     const saved = localStorage.getItem('volume');
     return saved !== null ? JSON.parse(saved) : 0.5;
   });
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -145,7 +149,9 @@ export default function App() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [selectedSession, setSelectedSession] = useState<any | null>(null);
   const [showSessionDetail, setShowSessionDetail] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
   const hasSavedSession = useRef(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Friendship state
   const [showFriends, setShowFriends] = useState(false);
@@ -200,7 +206,16 @@ export default function App() {
     localStorage.setItem('autoLock', JSON.stringify(autoLock));
     localStorage.setItem('soundEnabled', JSON.stringify(soundEnabled));
     localStorage.setItem('volume', JSON.stringify(volume));
-  }, [language, autoHighlight, autoLock, soundEnabled, volume]);
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
+    }
+  }, [language, autoHighlight, autoLock, soundEnabled, volume, darkMode]);
 
   // Save game session to Firestore when game ends
   useEffect(() => {
@@ -528,6 +543,7 @@ export default function App() {
       if (showAvatarPicker) setShowAvatarPicker(false);
       else if (friendshipToRemove) setFriendshipToRemove(null);
       else if (showSessionDetail) setShowSessionDetail(false);
+      else if (showDescription) setShowDescription(false);
       else if (showSummary) closeSummary();
       else if (showHistory) setShowHistory(false);
       else if (showFriends) closeFriends();
@@ -572,22 +588,74 @@ export default function App() {
     });
   };
 
+  const handleIconTouchStart = () => {
+    longPressTimer.current = setTimeout(() => {
+      setShowDescription(true);
+      playSound(SOUNDS.SWIPE);
+    }, 600);
+  };
+
+  const handleIconTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+  };
+
+  const handleIconDoubleClick = () => {
+    setShowDescription(true);
+    playSound(SOUNDS.SWIPE);
+  };
+
   const summaryTheme = summaryData.total >= 11 
-    ? { bg: 'bg-yellow-500', text: 'text-yellow-600', btn: 'bg-yellow-500', hover: 'hover:bg-yellow-600' }
+    ? { bg: 'bg-yellow-500 dark:bg-yellow-600/80', text: 'text-yellow-600 dark:text-yellow-400', btn: 'bg-yellow-500 dark:bg-yellow-600', hover: 'hover:bg-yellow-600 dark:hover:bg-yellow-700' }
     : summaryData.total >= 7
-    ? { bg: 'bg-emerald-600', text: 'text-emerald-600', btn: 'bg-emerald-500', hover: 'hover:bg-emerald-600' }
+    ? { bg: 'bg-emerald-600 dark:bg-emerald-900/80', text: 'text-emerald-600 dark:text-emerald-400', btn: 'bg-emerald-500 dark:bg-emerald-600', hover: 'hover:bg-emerald-600 dark:hover:bg-emerald-700' }
     : summaryData.total >= 4
-    ? { bg: 'bg-amber-500', text: 'text-amber-600', btn: 'bg-amber-500', hover: 'hover:bg-amber-600' }
-    : { bg: 'bg-rose-600', text: 'text-rose-600', btn: 'bg-rose-500', hover: 'hover:bg-rose-600' };
+    ? { bg: 'bg-amber-500 dark:bg-amber-900/80', text: 'text-amber-600 dark:text-amber-400', btn: 'bg-amber-500 dark:bg-amber-600', hover: 'hover:bg-amber-600 dark:hover:bg-amber-700' }
+    : { bg: 'bg-rose-600 dark:bg-rose-900/80', text: 'text-rose-600 dark:text-rose-400', btn: 'bg-rose-500 dark:bg-rose-600', hover: 'hover:bg-rose-600 dark:hover:bg-rose-700' };
 
   return (
-    <div className="h-svh bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21] overflow-hidden fixed inset-0">
+    <div className="h-svh bg-[#F0F2F5] dark:bg-slate-950 flex flex-col items-center justify-center p-4 font-sans text-[#1C1E21] dark:text-slate-100 overflow-hidden fixed inset-0 transition-colors duration-500">
       {!isFirebaseConfigured && (
         <div className="fixed top-0 left-0 right-0 bg-amber-500 text-white text-center py-2 px-4 z-[100] font-bold text-sm flex items-center justify-center gap-2">
           <Settings size={16} className="animate-spin" />
           <span>Firebase not configured. Please set the required secrets in Settings.</span>
         </div>
       )}
+      {/* Description Modal */}
+      <AnimatePresence>
+        {showDescription && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowDescription(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-4 transition-colors duration-500"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-600">
+                  <Sparkles size={24} />
+                  <h2 className="text-xl font-bold">About</h2>
+                </div>
+                <button onClick={() => setShowDescription(false)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                  <X size={24} />
+                </button>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                A collaborative word-guessing game where players draw from a pool of 110 bilingual cards. Challenge friends, track session history, and aim for a perfect score with immersive sound effects and real-time stats.
+              </p>
+              <button
+                onClick={() => setShowDescription(false)}
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-emerald-100"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Session Detail Modal */}
       <AnimatePresence>
         {showSessionDetail && selectedSession && (
@@ -596,7 +664,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh]"
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh] transition-colors duration-500"
             >
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {selectedSession.history ? (
@@ -608,10 +676,10 @@ export default function App() {
                     return (
                       <div 
                         key={idx} 
-                        className={`p-3 rounded-2xl border flex items-center gap-3 ${
-                          isCorrect ? 'bg-emerald-50 border-emerald-100' :
-                          isSkipped ? 'bg-slate-50 border-slate-200' :
-                          'bg-rose-50 border-rose-100'
+                        className={`p-3 rounded-2xl border flex items-center gap-3 transition-colors duration-500 ${
+                          isCorrect ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20' :
+                          isSkipped ? 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700' :
+                          'bg-rose-50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/20'
                         }`}
                       >
                         <div className="flex flex-col items-center gap-1">
@@ -632,10 +700,10 @@ export default function App() {
                             {(language === 'it' ? h.item.wordsIt : h.item.words).map((word: string, wIdx: number) => (
                               <span 
                                 key={wIdx}
-                                className={`text-sm px-2 py-1 rounded-lg font-bold ${
+                                className={`text-sm px-2 py-1 rounded-lg font-bold transition-colors duration-200 ${
                                   h.selectedWordIndex === wIdx 
-                                    ? 'bg-slate-800 text-white shadow-sm' 
-                                    : 'bg-white/50 text-slate-400 border border-slate-200/50'
+                                    ? 'bg-slate-800 dark:bg-emerald-500 text-white shadow-sm' 
+                                    : 'bg-white/50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 border border-slate-200/50 dark:border-slate-700/50'
                                 }`}
                               >
                                 {word}
@@ -654,7 +722,7 @@ export default function App() {
                 )}
               </div>
 
-              <div className="p-4 bg-slate-50 border-t border-slate-100">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 transition-colors duration-500">
                 {(() => {
                   const displayParticipants = Array.from(new Set([selectedSession.userId, ...(selectedSession.participants || [])]))
                     .filter(uid => uid !== user?.uid)
@@ -671,7 +739,7 @@ export default function App() {
                   return (
                     <div className="grid grid-cols-3 gap-2 mb-3">
                       <div className="col-start-3 flex justify-end">
-                        <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full border border-slate-200 shadow-sm">
+                        <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-500">
                           <span className="text-[9px] font-black text-slate-400 uppercase mr-0.5">With</span>
                           <div className="flex -space-x-2">
                             {displayParticipants.map((uid: string, pIdx: number) => {
@@ -682,7 +750,7 @@ export default function App() {
                               return (
                                 <div 
                                   key={pIdx} 
-                                  className={`w-6 h-6 rounded-full border-2 ${isOrganizer ? 'border-emerald-500' : 'border-white'} bg-slate-100 flex items-center justify-center overflow-hidden shadow-sm`} 
+                                  className={`w-6 h-6 rounded-full border-2 ${isOrganizer ? 'border-emerald-500' : 'border-white dark:border-slate-800'} bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden shadow-sm transition-colors duration-500`} 
                                   title={`${profile?.displayName || 'Friend'}${isOrganizer ? ' (Organizer)' : ''}`}
                                 >
                                   {profile?.photoURL ? (
@@ -700,22 +768,22 @@ export default function App() {
                   );
                 })()}
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="bg-white p-2 rounded-xl border border-slate-200 text-center">
+                  <div className="bg-white dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center transition-colors duration-500">
                     <span className="text-[10px] font-black text-emerald-500 uppercase block">Correct</span>
-                    <span className="text-lg font-black text-slate-700">{selectedSession.correct}</span>
+                    <span className="text-lg font-black text-slate-700 dark:text-slate-200">{selectedSession.correct}</span>
                   </div>
-                  <div className="bg-white p-2 rounded-xl border border-slate-200 text-center">
+                  <div className="bg-white dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center transition-colors duration-500">
                     <span className="text-[10px] font-black text-slate-400 uppercase block">Skipped</span>
-                    <span className="text-lg font-black text-slate-700">{selectedSession.skipped}</span>
+                    <span className="text-lg font-black text-slate-700 dark:text-slate-200">{selectedSession.skipped}</span>
                   </div>
-                  <div className="bg-white p-2 rounded-xl border border-slate-200 text-center">
+                  <div className="bg-white dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center transition-colors duration-500">
                     <span className="text-[10px] font-black text-rose-500 uppercase block">Mistakes</span>
-                    <span className="text-lg font-black text-slate-700">{selectedSession.errors}</span>
+                    <span className="text-lg font-black text-slate-700 dark:text-slate-200">{selectedSession.errors}</span>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowSessionDetail(false)}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all active:scale-95"
+                  className="w-full py-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white rounded-2xl font-bold transition-all active:scale-95"
                 >
                   Back
                 </button>
@@ -737,7 +805,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh]"
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh] transition-colors duration-500"
             >
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Friends List */}
@@ -745,22 +813,22 @@ export default function App() {
                   <div className="space-y-2">
                     {friendships.filter(f => f.status === 'accepted').length > 0 ? (
                       friendships.filter(f => f.status === 'accepted').map(f => (
-                        <div key={f.id} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                        <div key={f.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm transition-colors duration-500">
                           <div className="flex items-center gap-3">
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white shadow-sm"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm"
                               referrerPolicy="no-referrer"
                             />
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-800 leading-none">{f.friendProfile?.displayName}</span>
-                              <span className="text-[10px] text-slate-400">{f.friendProfile?.email}</span>
+                              <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{f.friendProfile?.displayName}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">{f.friendProfile?.email}</span>
                             </div>
                           </div>
                           <button 
                             onClick={() => setFriendshipToRemove(f)}
-                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
                             title="Remove Friend"
                           >
                             <UserX size={20} />
@@ -768,9 +836,9 @@ export default function App() {
                         </div>
                       ))
                     ) : (
-                      <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                        <Search size={32} className="mx-auto text-slate-200 mb-2" />
-                        <p className="text-slate-400 text-sm">No friends yet. Add some!</p>
+                      <div className="py-8 text-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 transition-colors duration-500">
+                        <Search size={32} className="mx-auto text-slate-200 dark:text-slate-700 mb-2" />
+                        <p className="text-slate-400 dark:text-slate-500 text-sm">No friends yet. Add some!</p>
                       </div>
                     )}
                   </div>
@@ -782,30 +850,30 @@ export default function App() {
                     <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Incoming Requests</h3>
                     <div className="space-y-2">
                       {friendships.filter(f => f.toUid === user?.uid && f.status === 'pending').map(f => (
-                        <div key={f.id} className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                        <div key={f.id} className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl transition-colors duration-500">
                           <div className="flex items-center gap-3">
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white shadow-sm"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm"
                               referrerPolicy="no-referrer"
                             />
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-800 leading-none">{f.friendProfile?.displayName}</span>
-                              <span className="text-[10px] text-slate-400">{f.friendProfile?.email}</span>
+                              <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{f.friendProfile?.displayName}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">{f.friendProfile?.email}</span>
                             </div>
                           </div>
                           <div className="flex gap-1">
                             <button 
                               onClick={() => acceptFriendRequest(f.id)}
-                              className="p-2 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all"
+                              className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded-xl transition-all"
                               title="Accept"
                             >
                               <UserCheck size={20} />
                             </button>
                             <button 
                               onClick={() => declineFriendRequest(f.id)}
-                              className="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition-all"
+                              className="p-2 text-rose-500 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-xl transition-all"
                               title="Decline"
                             >
                               <UserX size={20} />
@@ -823,22 +891,22 @@ export default function App() {
                     <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Sent Requests</h3>
                     <div className="space-y-2">
                       {friendships.filter(f => f.fromUid === user?.uid && f.status === 'pending').map(f => (
-                        <div key={f.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-2xl">
+                        <div key={f.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl transition-colors duration-500">
                           <div className="flex items-center gap-3">
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white shadow-sm"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm"
                               referrerPolicy="no-referrer"
                             />
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-800 leading-none">{f.friendProfile?.displayName}</span>
-                              <span className="text-[10px] text-slate-400">{f.friendProfile?.email}</span>
+                              <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{f.friendProfile?.displayName}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">{f.friendProfile?.email}</span>
                             </div>
                           </div>
                           <button 
                             onClick={() => removeFriend(f.id)}
-                            className="p-2 text-slate-400 hover:bg-slate-200 rounded-xl transition-all"
+                            className="p-2 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all"
                             title="Cancel Request"
                           >
                             <Trash2 size={18} />
@@ -862,7 +930,7 @@ export default function App() {
                           setFriendEmail(e.target.value);
                           if (friendError) setFriendError(null);
                         }}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500 transition-all text-sm"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:outline-none focus:border-emerald-500 transition-all text-sm dark:text-slate-100"
                       />
                     </div>
                     <button 
@@ -897,10 +965,10 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="p-6 bg-slate-50 border-t border-slate-100">
+              <div className="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-800">
                 <button
                   onClick={closeFriends}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all active:scale-95"
+                  className="w-full py-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white rounded-2xl font-bold transition-all active:scale-95"
                 >
                   Close
                 </button>
@@ -918,21 +986,21 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh]"
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh] transition-colors duration-500"
             >
               <div className="flex-1 overflow-y-auto p-4 pt-6 space-y-3">
                 {loadingSessions ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-4">
                     <RefreshCw className="animate-spin text-emerald-500" size={32} />
-                    <p className="text-slate-400 font-medium">Loading history...</p>
+                    <p className="text-slate-400 dark:text-slate-500 font-medium">Loading history...</p>
                   </div>
                 ) : historyError ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
-                    <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center">
                       <XCircle size={32} className="text-rose-500" />
                     </div>
                     <div>
-                      <h3 className="text-slate-800 font-bold">Error loading history</h3>
+                      <h3 className="text-slate-800 dark:text-slate-100 font-bold">Error loading history</h3>
                       <p className="text-slate-400 text-sm px-8">{historyError}</p>
                     </div>
                     <button 
@@ -950,12 +1018,12 @@ export default function App() {
                     
                     const isParticipant = session.userId !== user?.uid;
                     const theme = session.score >= 11 
-                      ? { bg: 'bg-yellow-50 border-yellow-100', text: 'text-yellow-600', accent: 'bg-yellow-500' }
+                      ? { bg: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-100 dark:border-yellow-900/40', text: 'text-yellow-600 dark:text-yellow-400', accent: 'bg-yellow-500' }
                       : session.score >= 7
-                      ? { bg: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-600', accent: 'bg-emerald-500' }
+                      ? { bg: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/40', text: 'text-emerald-600 dark:text-emerald-400', accent: 'bg-emerald-500' }
                       : session.score >= 4
-                      ? { bg: 'bg-amber-50 border-amber-100', text: 'text-amber-600', accent: 'bg-amber-500' }
-                      : { bg: 'bg-rose-50 border-rose-100', text: 'text-rose-600', accent: 'bg-rose-500' };
+                      ? { bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/40', text: 'text-amber-600 dark:text-amber-400', accent: 'bg-amber-500' }
+                      : { bg: 'bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-900/40', text: 'text-rose-600 dark:text-rose-400', accent: 'bg-rose-500' };
 
                     return (
                       <button 
@@ -968,13 +1036,13 @@ export default function App() {
                       >
                         {/* Left: Time Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 text-slate-500 mb-1">
+                          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 mb-1">
                             <Calendar size={12} />
                             <span className="text-xs font-bold truncate">
                               {getRelativeTime(date)}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-slate-600">
+                          <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
                             <Clock size={14} />
                             <span className="text-sm font-black">
                               {session.duration !== undefined ? (
@@ -993,20 +1061,20 @@ export default function App() {
                         </div>
 
                         {/* Middle: Stats */}
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white/50 rounded-xl border border-white/50">
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-white/50 dark:bg-slate-900/50 rounded-xl border border-white/50 dark:border-slate-700/50 transition-colors duration-500">
                           <div className="flex flex-col items-center min-w-[32px]">
                             <span className="text-[9px] font-black text-emerald-500 uppercase leading-none mb-0.5">C</span>
-                            <span className="text-lg font-black text-emerald-700 leading-none">{session.correct}</span>
+                            <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 leading-none">{session.correct}</span>
                           </div>
-                          <div className="w-[1px] h-6 bg-slate-200" />
+                          <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-700" />
                           <div className="flex flex-col items-center min-w-[32px]">
                             <span className="text-[9px] font-black text-slate-400 uppercase leading-none mb-0.5">S</span>
-                            <span className="text-lg font-black text-slate-600 leading-none">{session.skipped}</span>
+                            <span className="text-lg font-black text-slate-600 dark:text-slate-300 leading-none">{session.skipped}</span>
                           </div>
-                          <div className="w-[1px] h-6 bg-slate-200" />
+                          <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-700" />
                           <div className="flex flex-col items-center min-w-[32px]">
                             <span className="text-[9px] font-black text-rose-400 uppercase leading-none mb-0.5">E</span>
-                            <span className="text-lg font-black text-rose-600 leading-none">{session.errors}</span>
+                            <span className="text-lg font-black text-rose-600 dark:text-rose-400 leading-none">{session.errors}</span>
                           </div>
                         </div>
 
@@ -1020,19 +1088,19 @@ export default function App() {
                   })
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                      <History size={32} className="text-slate-200" />
+                    <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                      <History size={32} className="text-slate-200 dark:text-slate-700" />
                     </div>
-                    <h3 className="text-slate-800 font-bold">No history yet</h3>
+                    <h3 className="text-slate-800 dark:text-slate-100 font-bold">No history yet</h3>
                     <p className="text-slate-400 text-sm px-8">Complete your first game to see your history here.</p>
                   </div>
                 )}
               </div>
 
-              <div className="p-4 border-t border-slate-100">
+              <div className="p-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   onClick={() => setShowHistory(false)}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold transition-all active:scale-95"
+                  className="w-full py-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white rounded-2xl font-bold transition-all active:scale-95"
                 >
                   Close
                 </button>
@@ -1050,17 +1118,17 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transition-colors duration-500"
             >
               <div className="p-6 space-y-6">
                 {/* Auth Section */}
                 {user ? (
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-3 flex-1">
                       <img 
                         src={user.photoURL || ''} 
                         alt={user.displayName || 'User'} 
-                        className="w-10 h-10 rounded-full border border-white shadow-sm"
+                        className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm"
                         referrerPolicy="no-referrer"
                       />
                       <div className="flex flex-col flex-1">
@@ -1074,7 +1142,7 @@ export default function App() {
                                   setNewDisplayName(e.target.value);
                                   setNameError(null);
                                 }}
-                                className={`w-full px-2 py-1 text-sm font-bold bg-white border rounded-lg focus:outline-none ${nameError ? 'border-rose-500' : 'border-slate-200 focus:border-emerald-500'}`}
+                                className={`w-full px-2 py-1 text-sm font-bold bg-white dark:bg-slate-900 border rounded-lg focus:outline-none ${nameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
                                 autoFocus
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') handleSaveName();
@@ -1087,7 +1155,7 @@ export default function App() {
                               <button
                                 onClick={handleSaveName}
                                 disabled={isUpdatingName || !newDisplayName.trim()}
-                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all disabled:opacity-50"
+                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-all disabled:opacity-50"
                               >
                                 {isUpdatingName ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
                               </button>
@@ -1097,7 +1165,7 @@ export default function App() {
                                   setNameError(null);
                                 }}
                                 disabled={isUpdatingName}
-                                className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-all"
+                                className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
                               >
                                 <X size={16} />
                               </button>
@@ -1108,20 +1176,20 @@ export default function App() {
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 group">
-                            <span className="text-sm font-bold text-slate-800 leading-none">{user.displayName}</span>
+                            <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{user.displayName}</span>
                             <button
                               onClick={() => {
                                 setNewDisplayName(user.displayName || '');
                                 setIsEditingName(true);
                               }}
-                              className="p-1 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                              className="p-1 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-all"
                               title="Edit Name"
                             >
                               <Edit2 size={14} />
                             </button>
                           </div>
                         )}
-                        <span className="text-[10px] text-slate-400">{user.email}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">{user.email}</span>
                       </div>
                     </div>
                     {!isEditingName && (
@@ -1130,7 +1198,7 @@ export default function App() {
                           logout();
                           setShowSettings(false);
                         }}
-                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all ml-2"
+                        className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all ml-2"
                         title="Logout"
                       >
                         <LogOut size={20} />
@@ -1143,7 +1211,7 @@ export default function App() {
                       signInWithGoogle();
                       setShowSettings(false);
                     }}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 bg-slate-50 text-slate-700 transition-all flex items-center justify-center gap-3 active:scale-95 hover:border-emerald-500 hover:bg-emerald-50"
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all flex items-center justify-center gap-3 active:scale-95 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path
@@ -1173,19 +1241,38 @@ export default function App() {
                   <div className="flex gap-2">
                     <button 
                       onClick={() => setLanguage('it')}
-                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'it' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400 grayscale'}`}
+                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'it' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
                     >
                       <span className="text-3xl">🇮🇹</span>
                       <span className="font-bold">Italiano</span>
                     </button>
                     <button 
                       onClick={() => setLanguage('en')}
-                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'en' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400 grayscale'}`}
+                      className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${language === 'en' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
                     >
                       <span className="text-3xl">🇬🇧</span>
                       <span className="font-bold">English</span>
                     </button>
                   </div>
+                </div>
+
+                {/* Appearance Settings */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Appearance</h3>
+                  <button 
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${darkMode ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${darkMode ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                        {darkMode ? <Moon size={18} /> : <Sun size={18} />}
+                      </div>
+                      <span className="font-bold">{darkMode ? 'Night Mode' : 'Day Mode'}</span>
+                    </div>
+                    <div className={`w-10 h-6 rounded-full relative transition-colors ${darkMode ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${darkMode ? 'left-5' : 'left-1'}`} />
+                    </div>
+                  </button>
                 </div>
 
                 {/* Gameplay Settings */}
@@ -1194,30 +1281,30 @@ export default function App() {
                   <div className="space-y-2">
                     <button 
                       onClick={() => setAutoHighlight(!autoHighlight)}
-                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoHighlight ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
+                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoHighlight ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${autoHighlight ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                        <div className={`p-2 rounded-lg ${autoHighlight ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           <Sparkles size={18} />
                         </div>
                         <span className="font-bold">Auto-Highlight</span>
                       </div>
-                      <div className={`w-10 h-6 rounded-full relative transition-colors ${autoHighlight ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                      <div className={`w-10 h-6 rounded-full relative transition-colors ${autoHighlight ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoHighlight ? 'left-5' : 'left-1'}`} />
                       </div>
                     </button>
 
                     <button 
                       onClick={() => setAutoLock(!autoLock)}
-                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoLock ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 bg-slate-50 text-slate-400'}`}
+                      className={`w-full p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${autoLock ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-400 grayscale'}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${autoLock ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
+                        <div className={`p-2 rounded-lg ${autoLock ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           <Lock size={18} />
                         </div>
                         <span className="font-bold">Auto-Lock</span>
                       </div>
-                      <div className={`w-10 h-6 rounded-full relative transition-colors ${autoLock ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                      <div className={`w-10 h-6 rounded-full relative transition-colors ${autoLock ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoLock ? 'left-5' : 'left-1'}`} />
                       </div>
                     </button>
@@ -1227,10 +1314,10 @@ export default function App() {
                 {/* Sound Settings */}
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Audio</h3>
-                  <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-100 flex items-center gap-4">
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors duration-500">
                     <button 
                       onClick={() => setSoundEnabled(!soundEnabled)}
-                      className={`p-3 rounded-xl transition-all active:scale-90 ${soundEnabled ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-200 text-slate-500'}`}
+                      className={`p-3 rounded-xl transition-all active:scale-90 ${soundEnabled ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}
                       title={soundEnabled ? "Mute" : "Unmute"}
                     >
                       {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
@@ -1251,12 +1338,12 @@ export default function App() {
                         onTouchEnd={() => playSound(SOUNDS.CORRECT)}
                         className="flex-1 h-2 rounded-lg appearance-none cursor-pointer"
                         style={{
-                          background: `linear-gradient(to right, #10b981 0%, #10b981 ${volume * 100}%, #e2e8f0 ${volume * 100}%, #e2e8f0 100%)`
+                          background: `linear-gradient(to right, #10b981 0%, #10b981 ${volume * 100}%, ${darkMode ? '#334155' : '#e2e8f0'} ${volume * 100}%, ${darkMode ? '#334155' : '#e2e8f0'} 100%)`
                         }}
                       />
                       <span 
                         onClick={() => playSound(SOUNDS.CORRECT)}
-                        className="text-xs font-bold text-slate-500 min-w-[32px] text-right cursor-pointer transition-colors"
+                        className="text-xs font-bold text-slate-500 dark:text-slate-400 min-w-[32px] text-right cursor-pointer transition-colors"
                         title="Click to test volume"
                       >
                         {Math.round(volume * 100)}%
@@ -1266,19 +1353,19 @@ export default function App() {
                 </div>
 
                 {/* Stats */}
-                <div className="pt-4 border-t border-slate-100 space-y-4">
-                  <div className="flex items-center justify-between text-slate-500">
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-2">
                       <Layers size={16} />
                       <span className="text-sm font-bold">Total Revealed Cards</span>
                     </div>
-                    <span className="text-sm font-black text-slate-800">{revealedCount} / {STATIC_ITEMS.length}</span>
+                    <span className="text-sm font-black text-slate-800 dark:text-slate-200">{revealedCount} / {STATIC_ITEMS.length}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setShowSettings(false)}
-                  className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all"
+                  className="w-full py-4 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all"
                 >
                   Close
                 </button>
@@ -1296,14 +1383,14 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6"
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6 transition-colors duration-500"
             >
               <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+                <div className="mx-auto w-16 h-16 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500">
                   <UserX size={32} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">Remove Friend?</h2>
-                <p className="text-slate-500">
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Remove Friend?</h2>
+                <p className="text-slate-500 dark:text-slate-400">
                   Are you sure you want to remove <strong>{friendshipToRemove.friendProfile?.displayName}</strong> from your friends?
                 </p>
               </div>
@@ -1311,7 +1398,7 @@ export default function App() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setFriendshipToRemove(null)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold transition-all active:scale-95"
+                  className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-bold transition-all active:scale-95"
                 >
                   Cancel
                 </button>
@@ -1320,7 +1407,7 @@ export default function App() {
                     removeFriend(friendshipToRemove.id);
                     setFriendshipToRemove(null);
                   }}
-                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-rose-200"
+                  className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-rose-200 dark:shadow-none"
                 >
                   Remove
                 </button>
@@ -1338,11 +1425,11 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6"
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6 transition-colors duration-500"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-slate-800">Choose Avatar</h2>
-                <button onClick={() => setShowAvatarPicker(false)} className="p-2 text-slate-400 hover:text-slate-600">
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Choose Avatar</h2>
+                <button onClick={() => setShowAvatarPicker(false)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                   <X size={24} />
                 </button>
               </div>
@@ -1364,7 +1451,7 @@ export default function App() {
                         referrerPolicy="no-referrer"
                       />
                       {isTaken && (
-                        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
+                        <div className="absolute inset-0 flex items-center justify-center text-slate-400 dark:text-slate-500">
                           <X size={16} strokeWidth={3} />
                         </div>
                       )}
@@ -1385,7 +1472,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transition-colors duration-500"
             >
               <div className={`${summaryTheme.bg} p-8 text-white text-center transition-colors duration-500`}>
                 <div className="mx-auto w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
@@ -1404,26 +1491,26 @@ export default function App() {
               </div>
               
               <div className="p-8 space-y-6">
-                <div className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <span className="text-slate-500 font-medium">Total Score</span>
+                <div className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 transition-colors duration-500">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">Total Score</span>
                   <span className={`text-3xl font-black ${summaryTheme.text}`}>{summaryData.total}</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="flex flex-col items-center p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="flex flex-col items-center p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20 transition-colors duration-500">
                     <CheckCircle2 className="text-emerald-500 mb-1" size={20} />
-                    <span className="text-xl font-black text-emerald-600">{summaryData.correct}</span>
-                    <span className="text-[10px] uppercase font-bold text-emerald-700">Correct</span>
+                    <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">{summaryData.correct}</span>
+                    <span className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-500/80">Correct</span>
                   </div>
-                  <div className="flex flex-col items-center p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <MinusCircle className="text-slate-400 mb-1" size={20} />
-                    <span className="text-xl font-black text-slate-600">{summaryData.skipped}</span>
-                    <span className="text-[10px] uppercase font-bold text-slate-500">Skipped</span>
+                  <div className="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors duration-500">
+                    <MinusCircle className="text-slate-400 dark:text-slate-500 mb-1" size={20} />
+                    <span className="text-xl font-black text-slate-600 dark:text-slate-300">{summaryData.skipped}</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-500/80">Skipped</span>
                   </div>
-                  <div className="flex flex-col items-center p-3 bg-rose-50 rounded-xl border border-rose-100">
+                  <div className="flex flex-col items-center p-3 bg-rose-50 dark:bg-rose-500/10 rounded-xl border border-rose-100 dark:border-rose-500/20 transition-colors duration-500">
                     <XCircle className="text-rose-500 mb-1" size={20} />
-                    <span className="text-xl font-black text-rose-600">{summaryData.errors}</span>
-                    <span className="text-[10px] uppercase font-bold text-rose-700">Mistakes</span>
+                    <span className="text-xl font-black text-rose-600 dark:text-rose-400">{summaryData.errors}</span>
+                    <span className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-500/80">Mistakes</span>
                   </div>
                 </div>
 
@@ -1440,13 +1527,13 @@ export default function App() {
       </AnimatePresence>
 
       {/* Android-style Status Bar Area (Visual only) */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[95%] max-h-[850px] relative">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[95%] max-h-[850px] relative transition-colors duration-500">
         
         {/* Header */}
-        <div className={`${timeLeft <= 0 ? 'bg-rose-600' : 'bg-emerald-600'} p-4 text-white flex justify-between items-center shadow-md relative h-20 transition-colors duration-500`}>
+        <div className={`${timeLeft <= 0 ? 'bg-rose-600 dark:bg-rose-900' : 'bg-emerald-600 dark:bg-emerald-900'} p-4 text-white flex justify-between items-center shadow-md relative h-20 transition-colors duration-500 border-b border-white/10`}>
           {/* Left: Timer */}
           <div className="flex flex-col items-center z-10 min-w-[60px]">
-            <span className="text-[10px] uppercase font-bold opacity-60 leading-none mb-0.5">Time</span>
+            <span className="text-[10px] uppercase font-bold opacity-70 leading-none mb-0.5 tracking-wider">Time</span>
             <div className={`text-2xl font-bold ${timeLeft <= 60 && timeLeft > 0 ? 'animate-pulse text-rose-200' : ''}`}>
               {formatTime(timeLeft)}
             </div>
@@ -1454,11 +1541,11 @@ export default function App() {
 
           {/* Center: Large Score */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-0">
-            <span className="text-[10px] uppercase font-bold opacity-60 leading-none mb-0.5">Score</span>
+            <span className="text-[10px] uppercase font-bold opacity-70 leading-none mb-0.5 tracking-wider">Score</span>
             <div className="text-3xl font-black tracking-tighter leading-none">
               {totalScore}
             </div>
-            <p className="text-[10px] font-bold opacity-80 mt-1">Remaining: {Math.max(0, 13 - history.length)}</p>
+            <p className="text-[10px] font-bold opacity-80 dark:opacity-100 dark:text-emerald-200 mt-1">Remaining: {Math.max(0, 13 - history.length)}</p>
           </div>
 
           {/* Right: Settings and Counter */}
@@ -1497,7 +1584,7 @@ export default function App() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden bg-slate-50/50 dark:bg-slate-900/60 transition-colors duration-500">
           <div className="flex-1 w-full flex items-center justify-center p-2">
             <AnimatePresence mode="wait">
             {authLoading || !friendshipsLoaded ? (
@@ -1509,7 +1596,7 @@ export default function App() {
                 className="flex flex-col items-center gap-4"
               >
                 <RefreshCw className="animate-spin text-emerald-500" size={48} />
-                <p className="text-slate-500 font-medium">Loading app...</p>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">Loading app...</p>
               </motion.div>
             ) : history.length > 0 ? (
               <motion.div
@@ -1525,14 +1612,14 @@ export default function App() {
                   isBlurred ? 'blur-md select-none' : ''
                 } ${
                   viewingIndex === 0 
-                    ? 'bg-white border-emerald-100' 
+                    ? 'bg-white dark:bg-slate-800 border-emerald-100 dark:border-emerald-900/50' 
                     : history[viewingIndex].item === null
-                      ? 'bg-white border-rose-200'
+                      ? 'bg-white dark:bg-slate-800 border-rose-200 dark:border-rose-900/50'
                       : history[viewingIndex].score === 1
-                        ? 'bg-emerald-50/80 border-emerald-200'
+                        ? 'bg-emerald-50/80 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800/50'
                         : history[viewingIndex].score === -1
-                          ? 'bg-rose-50/80 border-rose-200'
-                          : 'bg-slate-100/90 border-slate-300'
+                          ? 'bg-rose-50/80 dark:bg-rose-900/30 border-rose-200 dark:border-rose-800/50'
+                          : 'bg-slate-100/90 dark:bg-slate-800/90 border-slate-300 dark:border-slate-700'
                 }`}
                 id="item-card"
               >
@@ -1543,7 +1630,7 @@ export default function App() {
                         ? 'text-emerald-500'
                         : history[viewingIndex].score === -1
                           ? 'text-rose-500'
-                          : 'text-slate-500'
+                          : 'text-slate-500 dark:text-slate-400'
                     }`}>
                       <Layers size={28} />
                       <span className="text-base font-bold opacity-40">#{history[viewingIndex].item?.originalIndex}</span>
@@ -1561,7 +1648,7 @@ export default function App() {
                             isSelected ? 'scale-120' : 'scale-100 opacity-60 hover:opacity-100'
                           }`}
                         >
-                          <span className={`${isSelected ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl'} font-bold capitalize text-slate-800 tracking-wide transition-all`}>
+                          <span className={`${isSelected ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl'} font-bold capitalize text-slate-800 dark:text-slate-100 tracking-wide transition-all`}>
                             {language === 'it' ? history[viewingIndex].item?.wordsIt[idx] : history[viewingIndex].item?.words[idx]}
                           </span>
                         </button>
@@ -1569,10 +1656,10 @@ export default function App() {
                     })}
                   </>
                 ) : (
-                  <div className="flex flex-col items-center text-rose-500">
+                  <div className="flex flex-col items-center text-rose-500 dark:text-rose-400">
                     <XCircle size={64} className="mb-4 opacity-20" />
                     <p className="text-xl font-black uppercase">Penalty Card</p>
-                    <p className="text-sm opacity-60">This card was added due to a mistake</p>
+                    <p className="text-sm opacity-60 dark:opacity-80">This card was added due to a mistake</p>
                   </div>
                 )}
 
@@ -1602,16 +1689,26 @@ export default function App() {
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-md space-y-6"
               >
-                <div className="text-slate-400 text-center mb-8">
-                  <Layers size={64} className="mx-auto mb-4 opacity-20" />
-                  <p className="text-lg font-medium">Tap the button to start a new game</p>
+                <div className="text-slate-400 dark:text-slate-500 text-center mb-8">
+                  <div
+                    className="cursor-help select-none inline-block"
+                    onDoubleClick={handleIconDoubleClick}
+                    onMouseDown={handleIconTouchStart}
+                    onMouseUp={handleIconTouchEnd}
+                    onMouseLeave={handleIconTouchEnd}
+                    onTouchStart={handleIconTouchStart}
+                    onTouchEnd={handleIconTouchEnd}
+                  >
+                    <Layers size={64} className="mx-auto mb-4 opacity-20" />
+                  </div>
+                  <p className="text-lg font-medium text-slate-600 dark:text-slate-400">Tap the button to start a new game</p>
                 </div>
 
                 {user && (
-                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                  <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 transition-colors duration-500">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-slate-800">Participants</h3>
-                      <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">
+                      <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Participants</h3>
+                      <span className="text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-lg">
                         {selectedParticipants.length + 1} / 7
                       </span>
                     </div>
@@ -1700,7 +1797,7 @@ export default function App() {
                           className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-all"
                           title="Add Guest"
                         >
-                          <div className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-emerald-500 hover:text-emerald-500 transition-all">
+                          <div className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:border-emerald-500 hover:text-emerald-500 transition-all">
                             <UserPlus size={20} />
                           </div>
                         </button>
@@ -1715,12 +1812,12 @@ export default function App() {
         </div>
 
         {/* Controls */}
-        <div className="pt-4 px-8 pb-14 bg-slate-50 border-t border-slate-200 flex flex-col gap-6">
+        <div className="pt-4 px-8 pb-14 bg-white dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-6 transition-colors duration-500">
           <div className="flex items-center justify-center gap-8">
             <button
               onClick={() => setIsBlurred(!isBlurred)}
               className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none shadow-inner ${
-                isBlurred ? 'bg-emerald-500' : 'bg-slate-300'
+                isBlurred ? 'bg-emerald-500 dark:bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
               }`}
               id="blur-toggle"
               title={isBlurred ? "Show content" : "Hide content"}
@@ -1731,9 +1828,9 @@ export default function App() {
                 }`}
               >
                 {isBlurred ? (
-                  <EyeOff size={14} strokeWidth={2.5} className="text-emerald-500" />
+                  <EyeOff size={14} strokeWidth={2.5} className="text-emerald-500 dark:text-emerald-400" />
                 ) : (
-                  <Eye size={14} strokeWidth={2.5} className="text-slate-400" />
+                  <Eye size={14} strokeWidth={2.5} className="text-slate-400 dark:text-slate-500" />
                 )}
               </span>
             </button>
@@ -1741,7 +1838,7 @@ export default function App() {
             <button
               onClick={toggleLock}
               className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none shadow-inner ${
-                isLocked ? 'bg-rose-500' : 'bg-slate-300'
+                isLocked ? 'bg-rose-500 dark:bg-rose-600' : 'bg-slate-300 dark:bg-slate-700'
               }`}
               id="lock-toggle"
               title={isLocked ? "Unlock controls" : "Lock controls"}
@@ -1752,9 +1849,9 @@ export default function App() {
                 }`}
               >
                 {isLocked ? (
-                  <Lock size={14} strokeWidth={2.5} className="text-rose-500" />
+                  <Lock size={14} strokeWidth={2.5} className="text-rose-500 dark:text-rose-400" />
                 ) : (
-                  <Unlock size={14} strokeWidth={2.5} className="text-slate-400" />
+                  <Unlock size={14} strokeWidth={2.5} className="text-slate-400 dark:text-slate-500" />
                 )}
               </span>
             </button>
@@ -1767,11 +1864,11 @@ export default function App() {
                 disabled={isLocked || viewingIndex !== 0 || selectedWordIndex === null}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
                   (isLocked || viewingIndex !== 0 || selectedWordIndex === null)
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                    : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                    ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed' 
+                    : 'bg-emerald-500 dark:bg-emerald-600 text-white hover:bg-emerald-600 dark:hover:bg-emerald-700'
                 }`}
               >
-                <span className="text-[10px] uppercase opacity-80 mb-1">Correct</span>
+                <span className="text-[10px] uppercase opacity-80 mb-1 tracking-wider">Correct</span>
                 <span className="text-xl">+1</span>
               </button>
               <button
@@ -1779,11 +1876,11 @@ export default function App() {
                 disabled={isLocked || viewingIndex !== 0 || selectedWordIndex === null}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
                   (isLocked || viewingIndex !== 0 || selectedWordIndex === null)
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                    : 'bg-slate-400 text-white hover:bg-slate-500'
+                    ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed' 
+                    : 'bg-slate-400 dark:bg-slate-700 text-white hover:bg-slate-500 dark:hover:bg-slate-600'
                 }`}
               >
-                <span className="text-[10px] uppercase opacity-80 mb-1">Skipped</span>
+                <span className="text-[10px] uppercase opacity-80 mb-1 tracking-wider">Skipped</span>
                 <span className="text-xl">0</span>
               </button>
               <button
@@ -1791,11 +1888,11 @@ export default function App() {
                 disabled={isLocked || viewingIndex !== 0 || selectedWordIndex === null}
                 className={`flex-1 py-2 rounded-2xl font-bold shadow-lg transition-all active:scale-95 flex flex-col items-center justify-center ${
                   (isLocked || viewingIndex !== 0 || selectedWordIndex === null)
-                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                    : 'bg-rose-500 text-white hover:bg-rose-600'
+                    ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed' 
+                    : 'bg-rose-500 dark:bg-rose-600 text-white hover:bg-rose-600 dark:hover:bg-rose-700'
                 }`}
               >
-                <span className="text-[10px] uppercase opacity-80 mb-1">Wrong</span>
+                <span className="text-[10px] uppercase opacity-80 mb-1 tracking-wider">Wrong</span>
                 <span className="text-xl">0</span>
               </button>
             </div>
@@ -1806,8 +1903,8 @@ export default function App() {
               id="extract-button"
               className={`w-full py-4 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
                 (isLocked || viewingIndex !== 0)
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                  : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed' 
+                  : 'bg-emerald-500 dark:bg-emerald-600 text-white hover:bg-emerald-600 dark:hover:bg-emerald-700 dark:shadow-none'
               }`}
             >
               {isLocked ? <Lock size={20} /> : <RefreshCw size={20} className={pool.length === 0 ? 'animate-spin' : ''} />}
@@ -1825,7 +1922,7 @@ export default function App() {
             const histIndex = Math.min(history.length - 1, 12) - i;
             const histItem = histIndex >= 0 ? history[histIndex] : null;
             
-            let dotColor = 'bg-slate-200/50';
+            let dotColor = 'bg-slate-200/50 dark:bg-slate-700/50';
             let isCurrent = false;
             let isViewing = false;
 
@@ -1836,9 +1933,9 @@ export default function App() {
               
               if (histItem.score === 1) dotColor = 'bg-emerald-500';
               else if (histItem.score === -1) dotColor = 'bg-rose-500';
-              else if (histItem.item === null) dotColor = 'bg-black';
-              else if (histItem.score === 0) dotColor = 'bg-slate-400';
-              else dotColor = 'bg-emerald-200'; // Waiting for score
+              else if (histItem.item === null) dotColor = 'bg-black dark:bg-white';
+              else if (histItem.score === 0) dotColor = 'bg-slate-400 dark:bg-slate-500';
+              else dotColor = 'bg-emerald-200 dark:bg-emerald-800'; // Waiting for score
             }
 
             return (
