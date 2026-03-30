@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users, Folder, Edit2, Sun, Moon } from 'lucide-react';
+import { Lock, Unlock, RefreshCw, Layers, Trophy, CheckCircle2, XCircle, MinusCircle, Eye, EyeOff, Sparkles, Settings, X, ChevronsRight, Volume2, VolumeX, LogIn, LogOut, User as UserIcon, History, Calendar, Clock, BarChart3, Contact, UserPlus, UserCheck, UserX, Mail, Search, Trash2, Check, Users, Folder, Edit2, Sun, Moon, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Filter } from 'bad-words';
@@ -153,8 +153,65 @@ export default function App() {
   const [showDescription, setShowDescription] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isAddingGuestFromCamera, setIsAddingGuestFromCamera] = useState(false);
   const hasSavedSession = useRef(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
+
+    if (file && (selectedProfile || isAddingGuestFromCamera)) {
+      if (!apiKey) {
+        console.error('ImgBB API key is missing. Please add VITE_IMGBB_API_KEY to your .env file.');
+        // Fallback to base64 if no API key is provided for demo purposes
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          if (isAddingGuestFromCamera) {
+            confirmAddGuest(base64String);
+            setIsAddingGuestFromCamera(false);
+          } else if (selectedProfile) {
+            setGuests(prev => prev.map(g => g.uid === selectedProfile.uid ? { ...g, photoURL: base64String } : g));
+            setSelectedProfile(prev => prev ? { ...prev, photoURL: base64String } : null);
+          }
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      setIsUploadingImage(true);
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          const imageUrl = data.data.url;
+          if (isAddingGuestFromCamera) {
+            confirmAddGuest(imageUrl);
+            setIsAddingGuestFromCamera(false);
+          } else if (selectedProfile) {
+            setGuests(prev => prev.map(g => g.uid === selectedProfile.uid ? { ...g, photoURL: imageUrl } : g));
+            setSelectedProfile(prev => prev ? { ...prev, photoURL: imageUrl } : null);
+          }
+        } else {
+          throw new Error(data.error?.message || 'Upload failed');
+        }
+      } catch (error) {
+        console.error('Image upload failed:', error);
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+  };
 
   // Friendship state
   const [showFriends, setShowFriends] = useState(false);
@@ -684,13 +741,36 @@ export default function App() {
               onClick={(e) => e.stopPropagation()}
               className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-[280px] overflow-hidden p-6 flex flex-col items-center text-center gap-4 transition-colors duration-500 border border-slate-100 dark:border-slate-800"
             >
-              <div className="relative">
+              <div className="relative group/avatar">
                 <img 
                   src={selectedProfile.photoURL || ''} 
                   alt={selectedProfile.displayName} 
-                  className="w-24 h-24 rounded-full shadow-lg"
+                  className={`w-24 h-24 rounded-full shadow-lg object-cover ${guests.some(g => g.uid === selectedProfile.uid) ? 'cursor-pointer hover:opacity-80 transition-all' : ''} ${isUploadingImage ? 'opacity-50' : ''}`}
                   referrerPolicy="no-referrer"
+                  onClick={() => {
+                    if (guests.some(g => g.uid === selectedProfile.uid) && !isUploadingImage) {
+                      fileInputRef.current?.click();
+                    }
+                  }}
                 />
+                {guests.some(g => g.uid === selectedProfile.uid) && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                    <div className="bg-black/40 rounded-full p-2 text-white">
+                      {isUploadingImage ? (
+                        <RefreshCw size={24} className="animate-spin" />
+                      ) : (
+                        <Camera size={24} />
+                      )}
+                    </div>
+                  </div>
+                )}
+                {isUploadingImage && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="bg-black/20 rounded-full p-2 text-white">
+                      <RefreshCw size={24} className="animate-spin" />
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="space-y-1 w-full">
                 {editingGuestUid === selectedProfile.uid ? (
@@ -797,7 +877,7 @@ export default function App() {
                       return (
                         <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Organizer')} className="w-10 h-10 rounded-full border-2 border-emerald-500" referrerPolicy="no-referrer" />
+                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Organizer')} className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center border-2 border-emerald-500">
                               <UserIcon size={20} className="text-slate-400" />
@@ -831,7 +911,7 @@ export default function App() {
                           onTouchEnd={endLongPress}
                         >
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                               <UserIcon size={20} className="text-slate-400" />
@@ -849,7 +929,7 @@ export default function App() {
                   <>
                     {/* Me (Current Setup) */}
                     <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
-                      <img src={user?.photoURL || ''} alt="Me" className="w-10 h-10 rounded-full border-2 border-emerald-500" referrerPolicy="no-referrer" />
+                      <img src={user?.photoURL || ''} alt="Me" className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover" referrerPolicy="no-referrer" />
                       <div className="flex-1">
                         <p className="font-bold text-slate-800 dark:text-slate-100">{user?.displayName || 'Me'}</p>
                         <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Organizer</p>
@@ -876,7 +956,7 @@ export default function App() {
                           onTouchEnd={endLongPress}
                         >
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                               <UserIcon size={20} className="text-slate-400" />
@@ -1179,7 +1259,7 @@ export default function App() {
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover"
                               referrerPolicy="no-referrer"
                             />
                             <div className="flex flex-col">
@@ -1216,7 +1296,7 @@ export default function App() {
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover"
                               referrerPolicy="no-referrer"
                             />
                             <div className="flex flex-col">
@@ -1257,7 +1337,7 @@ export default function App() {
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover"
                               referrerPolicy="no-referrer"
                             />
                             <div className="flex flex-col">
@@ -1492,7 +1572,7 @@ export default function App() {
                       <img 
                         src={user.photoURL || ''} 
                         alt={user.displayName || 'User'} 
-                        className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm"
+                        className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover"
                         referrerPolicy="no-referrer"
                       />
                       <div className="flex flex-col flex-1">
@@ -1771,13 +1851,31 @@ export default function App() {
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Choose Avatar</h2>
-                <button onClick={() => setShowAvatarPicker(false)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <button onClick={() => {
+                  setShowAvatarPicker(false);
+                  setIsAddingGuestFromCamera(false);
+                }} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                   <X size={24} />
                 </button>
               </div>
               
               <div className="grid grid-cols-4 gap-4">
                 {GUEST_AVATARS.map((avatar, idx) => {
+                  const isLast = idx === GUEST_AVATARS.length - 1;
+                  if (isLast) {
+                    return (
+                      <button
+                        key="camera"
+                        onClick={() => {
+                          setIsAddingGuestFromCamera(true);
+                          fileInputRef.current?.click();
+                        }}
+                        className="relative group transition-all active:scale-90 flex items-center justify-center aspect-square rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-500 text-slate-400 transition-all"
+                      >
+                        <Camera size={24} />
+                      </button>
+                    );
+                  }
                   const isTaken = (user?.photoURL === avatar) || guests.some(g => g.photoURL === avatar);
                   return (
                     <button
@@ -1789,7 +1887,7 @@ export default function App() {
                       <img 
                         src={avatar} 
                         alt={`Avatar ${idx}`} 
-                        className={`w-full aspect-square rounded-full border-2 transition-all ${isTaken ? 'border-transparent' : 'border-transparent group-hover:border-emerald-500'}`}
+                        className={`w-full aspect-square rounded-full border-2 transition-all object-cover ${isTaken ? 'border-transparent' : 'border-transparent group-hover:border-emerald-500'}`}
                         referrerPolicy="no-referrer"
                       />
                       {isTaken && (
@@ -2065,7 +2163,7 @@ export default function App() {
                           <img 
                             src={user.photoURL || ''} 
                             alt={user.displayName || 'Me'} 
-                            className="w-12 h-12 rounded-full"
+                            className="w-12 h-12 rounded-full object-cover"
                             referrerPolicy="no-referrer"
                           />
                           <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
@@ -2099,7 +2197,7 @@ export default function App() {
                               <img 
                                 src={f.friendProfile?.photoURL || ''} 
                                 alt={f.friendProfile?.displayName || 'User'} 
-                                className="w-12 h-12 rounded-full"
+                                className="w-12 h-12 rounded-full object-cover"
                                 referrerPolicy="no-referrer"
                               />
                               {isSelected && (
@@ -2135,7 +2233,7 @@ export default function App() {
                               <img 
                                 src={g.photoURL} 
                                 alt={g.displayName} 
-                                className="w-12 h-12 rounded-full"
+                                className="w-12 h-12 rounded-full object-cover"
                                 referrerPolicy="no-referrer"
                               />
                               {isSelected && (
@@ -2316,6 +2414,15 @@ export default function App() {
         </div>
       </div>
 
+      {/* Hidden File Input for Camera */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleImageCapture} 
+        accept="image/*" 
+        capture="user" 
+        className="hidden" 
+      />
     </div>
   );
 }
