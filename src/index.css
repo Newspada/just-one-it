@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 @layer base {
   input[type="range"]::-webkit-slider-thumb {
     @apply appearance-none w-4 h-4 rounded-full bg-emerald-500 cursor-pointer border-none;
