@@ -675,14 +675,14 @@ export default function App() {
                       return (
                         <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName || 'Organizer'} className="w-10 h-10 rounded-full border-2 border-emerald-500" referrerPolicy="no-referrer" />
+                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Organizer')} className="w-10 h-10 rounded-full border-2 border-emerald-500" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center border-2 border-emerald-500">
                               <UserIcon size={20} className="text-slate-400" />
                             </div>
                           )}
                           <div className="flex-1">
-                            <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || 'Organizer'}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || (isMe ? 'Me' : 'Organizer')}</p>
                             <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Organizer</p>
                           </div>
                         </div>
@@ -691,22 +691,25 @@ export default function App() {
 
                     {/* Other participants of the past session */}
                     {(selectedSession.participants || []).filter((uid: string) => uid !== selectedSession.userId).map((uid: string) => {
-                      const friend = friendships.find(f => f.friendProfile?.uid === uid)?.friendProfile;
+                      const isMe = uid === user?.uid;
+                      const friendship = friendships.find(f => f.friendProfile?.uid === uid);
+                      const isAcceptedFriend = friendship?.status === 'accepted';
+                      const friend = friendship?.friendProfile;
                       const guest = selectedSession.guestInfo?.find((g: any) => g.uid === uid);
-                      const profile = friend || guest;
+                      const profile = isMe ? user : (friend || guest);
                       
                       return (
                         <div key={uid} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName || 'Player'} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                               <UserIcon size={20} className="text-slate-400" />
                             </div>
                           )}
                           <div className="flex-1">
-                            <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || 'Unknown Player'}</p>
-                            <p className="text-xs text-slate-400 font-medium">{guest ? 'Guest' : 'Friend'}</p>
+                            <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || (isMe ? 'Me' : 'Unknown Player')}</p>
+                            <p className="text-xs text-slate-400 font-medium">{isMe ? 'Me' : (guest ? 'Guest' : (isAcceptedFriend ? 'Friend' : 'User'))}</p>
                           </div>
                         </div>
                       );
@@ -718,21 +721,24 @@ export default function App() {
                     <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
                       <img src={user?.photoURL || ''} alt="Me" className="w-10 h-10 rounded-full border-2 border-emerald-500" referrerPolicy="no-referrer" />
                       <div className="flex-1">
-                        <p className="font-bold text-slate-800 dark:text-slate-100">{user?.displayName}</p>
+                        <p className="font-bold text-slate-800 dark:text-slate-100">{user?.displayName || 'Me'}</p>
                         <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Organizer</p>
                       </div>
                     </div>
 
                     {/* Selected Friends & Guests (Current Setup) */}
                     {selectedParticipants.map(uid => {
-                      const friend = friendships.find(f => f.friendProfile?.uid === uid)?.friendProfile;
+                      const isMe = uid === user?.uid;
+                      const friendship = friendships.find(f => f.friendProfile?.uid === uid);
+                      const isAcceptedFriend = friendship?.status === 'accepted';
+                      const friend = friendship?.friendProfile;
                       const guest = guests.find(g => g.uid === uid);
-                      const profile = friend || guest;
+                      const profile = isMe ? user : (friend || guest);
                       
                       return (
                         <div key={uid} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
+                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                               <UserIcon size={20} className="text-slate-400" />
@@ -785,7 +791,7 @@ export default function App() {
                               </div>
                             ) : (
                               <div className="flex items-center gap-2 group/name">
-                                <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || 'Unknown Player'}</p>
+                                <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || (isMe ? 'Me' : 'Unknown Player')}</p>
                                 {guest && (
                                   <button 
                                     onClick={(e) => {
@@ -801,7 +807,9 @@ export default function App() {
                                 )}
                               </div>
                             )}
-                            <p className="text-xs text-slate-400 font-medium">{guest ? 'Guest' : 'Friend'}</p>
+                            {!editingGuestUid && (
+                              <p className="text-xs text-slate-400 font-medium">{isMe ? 'Me' : (guest ? 'Guest' : (isAcceptedFriend ? 'Friend' : 'User'))}</p>
+                            )}
                           </div>
                         </div>
                       );
