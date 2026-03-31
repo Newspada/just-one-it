@@ -756,8 +756,10 @@ export default function App() {
                 <img 
                   src={selectedProfile.photoURL || ''} 
                   alt={selectedProfile.displayName} 
-                  className={`w-24 h-24 rounded-full shadow-lg object-cover ${guests.some(g => g.uid === selectedProfile.uid) ? 'cursor-pointer hover:opacity-80 transition-all' : ''} ${isUploadingImage ? 'opacity-50' : ''}`}
+                  className={`w-24 h-24 rounded-full shadow-lg object-cover no-menu ${guests.some(g => g.uid === selectedProfile.uid) ? 'cursor-pointer hover:opacity-80 transition-all' : ''} ${isUploadingImage ? 'opacity-50' : ''}`}
                   referrerPolicy="no-referrer"
+                  onContextMenu={(e) => e.preventDefault()}
+                  draggable="false"
                   onClick={() => {
                     if (guests.some(g => g.uid === selectedProfile.uid) && !isUploadingImage) {
                       fileInputRef.current?.click();
@@ -888,7 +890,14 @@ export default function App() {
                       return (
                         <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Organizer')} className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover" referrerPolicy="no-referrer" />
+                            <img 
+                              src={profile.photoURL} 
+                              alt={profile.displayName || (isMe ? 'Me' : 'Organizer')} 
+                              className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover no-menu" 
+                              referrerPolicy="no-referrer" 
+                              onContextMenu={(e) => e.preventDefault()}
+                              draggable="false"
+                            />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center border-2 border-emerald-500">
                               <UserIcon size={20} className="text-slate-400" />
@@ -922,7 +931,14 @@ export default function App() {
                           onTouchEnd={endLongPress}
                         >
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                            <img 
+                              src={profile.photoURL} 
+                              alt={profile.displayName || (isMe ? 'Me' : 'Player')} 
+                              className="w-10 h-10 rounded-full object-cover no-menu" 
+                              referrerPolicy="no-referrer" 
+                              onContextMenu={(e) => e.preventDefault()}
+                              draggable="false"
+                            />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                               <UserIcon size={20} className="text-slate-400" />
@@ -940,7 +956,14 @@ export default function App() {
                   <>
                     {/* Me (Current Setup) */}
                     <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/20">
-                      <img src={user?.photoURL || ''} alt="Me" className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover" referrerPolicy="no-referrer" />
+                      <img 
+                        src={user?.photoURL || ''} 
+                        alt="Me" 
+                        className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover no-menu" 
+                        referrerPolicy="no-referrer" 
+                        onContextMenu={(e) => e.preventDefault()}
+                        draggable="false"
+                      />
                       <div className="flex-1">
                         <p className="font-bold text-slate-800 dark:text-slate-100">{user?.displayName || 'Me'}</p>
                         <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Organizer</p>
@@ -967,7 +990,14 @@ export default function App() {
                           onTouchEnd={endLongPress}
                         >
                           {profile?.photoURL ? (
-                            <img src={profile.photoURL} alt={profile.displayName || (isMe ? 'Me' : 'Player')} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                            <img 
+                              src={profile.photoURL} 
+                              alt={profile.displayName || (isMe ? 'Me' : 'Player')} 
+                              className="w-10 h-10 rounded-full object-cover no-menu" 
+                              referrerPolicy="no-referrer" 
+                              onContextMenu={(e) => e.preventDefault()}
+                              draggable="false"
+                            />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                               <UserIcon size={20} className="text-slate-400" />
@@ -1203,7 +1233,14 @@ export default function App() {
                                   onTouchEnd={endLongPress}
                                 >
                                   {profile?.photoURL ? (
-                                    <img src={profile.photoURL} alt={profile.displayName || 'Friend'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                    <img 
+                                      src={profile.photoURL} 
+                                      alt={profile.displayName || 'Friend'} 
+                                      className="w-full h-full object-cover no-menu" 
+                                      referrerPolicy="no-referrer" 
+                                      onContextMenu={(e) => e.preventDefault()}
+                                      draggable="false"
+                                    />
                                   ) : (
                                     <UserIcon size={12} className="text-slate-400" />
                                   )}
@@ -1270,8 +1307,10 @@ export default function App() {
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover no-menu"
                               referrerPolicy="no-referrer"
+                              onContextMenu={(e) => e.preventDefault()}
+                              draggable="false"
                             />
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{f.friendProfile?.displayName}</span>
@@ -1307,8 +1346,10 @@ export default function App() {
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover no-menu"
                               referrerPolicy="no-referrer"
+                              onContextMenu={(e) => e.preventDefault()}
+                              draggable="false"
                             />
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{f.friendProfile?.displayName}</span>
@@ -1348,8 +1389,10 @@ export default function App() {
                             <img 
                               src={f.friendProfile?.photoURL || ''} 
                               alt={f.friendProfile?.displayName || 'User'} 
-                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover"
+                              className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover no-menu"
                               referrerPolicy="no-referrer"
+                              onContextMenu={(e) => e.preventDefault()}
+                              draggable="false"
                             />
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-none">{f.friendProfile?.displayName}</span>
@@ -1583,8 +1626,10 @@ export default function App() {
                       <img 
                         src={user.photoURL || ''} 
                         alt={user.displayName || 'User'} 
-                        className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover"
+                        className="w-10 h-10 rounded-full border border-white dark:border-slate-700 shadow-sm object-cover no-menu"
                         referrerPolicy="no-referrer"
+                        onContextMenu={(e) => e.preventDefault()}
+                        draggable="false"
                       />
                       <div className="flex flex-col flex-1">
                         {isEditingName ? (
@@ -1898,8 +1943,10 @@ export default function App() {
                       <img 
                         src={avatar} 
                         alt={`Avatar ${idx}`} 
-                        className={`w-full aspect-square rounded-full border-2 transition-all object-cover ${isTaken ? 'border-transparent' : 'border-transparent group-hover:border-emerald-500'}`}
+                        className={`w-full aspect-square rounded-full border-2 transition-all object-cover no-menu ${isTaken ? 'border-transparent' : 'border-transparent group-hover:border-emerald-500'}`}
                         referrerPolicy="no-referrer"
+                        onContextMenu={(e) => e.preventDefault()}
+                        draggable="false"
                       />
                       {isTaken && (
                         <div className="absolute inset-0 flex items-center justify-center text-slate-400 dark:text-slate-500">
@@ -2174,8 +2221,10 @@ export default function App() {
                           <img 
                             src={user.photoURL || ''} 
                             alt={user.displayName || 'Me'} 
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="w-12 h-12 rounded-full object-cover no-menu"
                             referrerPolicy="no-referrer"
+                            onContextMenu={(e) => e.preventDefault()}
+                            draggable="false"
                           />
                           <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
                             <Check size={10} strokeWidth={4} />
@@ -2208,8 +2257,10 @@ export default function App() {
                               <img 
                                 src={f.friendProfile?.photoURL || ''} 
                                 alt={f.friendProfile?.displayName || 'User'} 
-                                className="w-12 h-12 rounded-full object-cover"
+                                className="w-12 h-12 rounded-full object-cover no-menu"
                                 referrerPolicy="no-referrer"
+                                onContextMenu={(e) => e.preventDefault()}
+                                draggable="false"
                               />
                               {isSelected && (
                                 <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
@@ -2244,8 +2295,10 @@ export default function App() {
                               <img 
                                 src={g.photoURL} 
                                 alt={g.displayName} 
-                                className="w-12 h-12 rounded-full object-cover"
+                                className="w-12 h-12 rounded-full object-cover no-menu"
                                 referrerPolicy="no-referrer"
+                                onContextMenu={(e) => e.preventDefault()}
+                                draggable="false"
                               />
                               {isSelected && (
                                 <div className="absolute -top-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-sm">
