@@ -789,26 +789,28 @@ export default function App() {
                 {editingGuestUid === selectedProfile.uid ? (
                   <div className="flex flex-col gap-1 w-full">
                     <div className="flex items-center gap-2">
-                      <input
-                        autoFocus
-                        type="text"
-                        value={editingGuestName}
-                        onChange={(e) => {
-                          setEditingGuestName(e.target.value);
-                          if (guestNameError) setGuestNameError(null);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleSaveGuestName(selectedProfile.uid);
-                            // Update the local selectedProfile display name
-                            setSelectedProfile((prev: any) => ({ ...prev, displayName: editingGuestName.trim() }));
-                          } else if (e.key === 'Escape') {
-                            setEditingGuestUid(null);
-                            setGuestNameError(null);
-                          }
-                        }}
-                        className={`flex-1 bg-white dark:bg-slate-900 border rounded-lg px-2 py-1 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none text-center ${guestNameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
-                      />
+                      <div className="relative flex-1 flex items-center">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editingGuestName}
+                          onChange={(e) => {
+                            setEditingGuestName(e.target.value);
+                            if (guestNameError) setGuestNameError(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveGuestName(selectedProfile.uid);
+                              // Update the local selectedProfile display name
+                              setSelectedProfile((prev: any) => ({ ...prev, displayName: editingGuestName.trim() }));
+                            } else if (e.key === 'Escape') {
+                              setEditingGuestUid(null);
+                              setGuestNameError(null);
+                            }
+                          }}
+                          className={`w-full bg-white dark:bg-slate-900 border rounded-lg px-2 py-1 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none text-center ${guestNameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
+                        />
+                      </div>
                       <button
                         onClick={() => {
                           handleSaveGuestName(selectedProfile.uid);
@@ -828,7 +830,7 @@ export default function App() {
                         className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all flex-shrink-0"
                         title="Cancel"
                       >
-                        <XCircle size={18} />
+                        <X size={18} />
                       </button>
                     </div>
                     {guestNameError && (
@@ -836,7 +838,7 @@ export default function App() {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center gap-2 group/name">
+                  <div className="flex items-center justify-center gap-1 group/name">
                     <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">{selectedProfile.displayName}</h3>
                     {guests.some(g => g.uid === selectedProfile.uid) && (
                       <button 
@@ -846,7 +848,7 @@ export default function App() {
                           setEditingGuestName(selectedProfile.displayName || '');
                           setGuestNameError(null);
                         }}
-                        className="p-1 text-emerald-500 hover:text-emerald-600 transition-all"
+                        className="p-1 text-slate-400 transition-all"
                       >
                         <Edit2 size={16} />
                       </button>
@@ -1007,24 +1009,26 @@ export default function App() {
                             {editingGuestUid === uid ? (
                               <div className="flex flex-col gap-1" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex items-center gap-2">
-                                  <input
-                                    autoFocus
-                                    type="text"
-                                    value={editingGuestName}
-                                    onChange={(e) => {
-                                      setEditingGuestName(e.target.value);
-                                      if (guestNameError) setGuestNameError(null);
-                                    }}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        handleSaveGuestName(uid);
-                                      } else if (e.key === 'Escape') {
-                                        setEditingGuestUid(null);
-                                        setGuestNameError(null);
-                                      }
-                                    }}
-                                    className={`flex-1 bg-white dark:bg-slate-900 border rounded-lg px-2 py-1 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none ${guestNameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
-                                  />
+                                  <div className="relative flex-1 flex items-center">
+                                    <input
+                                      autoFocus
+                                      type="text"
+                                      value={editingGuestName}
+                                      onChange={(e) => {
+                                        setEditingGuestName(e.target.value);
+                                        if (guestNameError) setGuestNameError(null);
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          handleSaveGuestName(uid);
+                                        } else if (e.key === 'Escape') {
+                                          setEditingGuestUid(null);
+                                          setGuestNameError(null);
+                                        }
+                                      }}
+                                      className={`w-full bg-white dark:bg-slate-900 border rounded-lg px-2 py-1 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none ${guestNameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
+                                    />
+                                  </div>
                                   <button
                                     onClick={() => handleSaveGuestName(uid)}
                                     disabled={!editingGuestName.trim()}
@@ -1038,7 +1042,7 @@ export default function App() {
                                       setEditingGuestUid(null);
                                       setGuestNameError(null);
                                     }}
-                                    className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                                    className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all"
                                     title="Cancel"
                                   >
                                     <X size={16} />
@@ -1049,7 +1053,7 @@ export default function App() {
                                 )}
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2 group/name">
+                              <div className="flex items-center gap-1 group/name">
                                 <p className="font-bold text-slate-800 dark:text-slate-100">{profile?.displayName || (isMe ? 'Me' : 'Unknown Player')}</p>
                                 {guest && (
                                   <button 
@@ -1059,7 +1063,7 @@ export default function App() {
                                       setEditingGuestName(profile?.displayName || '');
                                       setGuestNameError(null);
                                     }}
-                                    className="p-1 text-slate-400 hover:text-emerald-500 opacity-0 group-hover/name:opacity-100 transition-all"
+                                    className="p-1 text-slate-400 transition-all"
                                   >
                                     <Edit2 size={12} />
                                   </button>
@@ -1635,23 +1639,25 @@ export default function App() {
                         {isEditingName ? (
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                value={newDisplayName}
-                                onChange={(e) => {
-                                  setNewDisplayName(e.target.value);
-                                  setNameError(null);
-                                }}
-                                className={`w-full px-2 py-1 text-sm font-bold bg-white dark:bg-slate-900 border rounded-lg focus:outline-none ${nameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleSaveName();
-                                  if (e.key === 'Escape') {
-                                    setIsEditingName(false);
+                              <div className="relative flex-1 flex items-center">
+                                <input
+                                  type="text"
+                                  value={newDisplayName}
+                                  onChange={(e) => {
+                                    setNewDisplayName(e.target.value);
                                     setNameError(null);
-                                  }
-                                }}
-                              />
+                                  }}
+                                  className={`w-full px-2 py-1 text-sm font-bold bg-white dark:bg-slate-900 border rounded-lg focus:outline-none ${nameError ? 'border-rose-500' : 'border-slate-200 dark:border-slate-700 focus:border-emerald-500'}`}
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSaveName();
+                                    if (e.key === 'Escape') {
+                                      setIsEditingName(false);
+                                      setNameError(null);
+                                    }
+                                  }}
+                                />
+                              </div>
                               <button
                                 onClick={handleSaveName}
                                 disabled={isUpdatingName || !newDisplayName.trim()}
@@ -1665,7 +1671,7 @@ export default function App() {
                                   setNameError(null);
                                 }}
                                 disabled={isUpdatingName}
-                                className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                                className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all"
                               >
                                 <X size={16} />
                               </button>
